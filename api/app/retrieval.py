@@ -1,9 +1,12 @@
 """Retrieval functionality: chunking, embeddings, FAISS, Tantivy."""
 from __future__ import annotations
 
+import json
+import tempfile
 import numpy as np
 import faiss
 import tiktoken
+import tantivy
 from sentence_transformers import SentenceTransformer
 from typing import Any
 
@@ -154,4 +157,61 @@ class VectorIndex:
     def size(self) -> int:
         """Return the number of vectors in the index."""
         return self.index.ntotal
+
+
+class KeywordIndex:
+    """Simple keyword search index using Python built-ins (MVP implementation)."""
+    
+    def __init__(self):
+        """Initialize simple keyword index."""
+        self.documents: list[dict[str, Any]] = []
+    
+    def add(self, text: str, metadata: dict[str, Any]) -> None:
+        """
+        Add a document to the keyword index.
+        
+        Args:
+            text: Text content to index
+            metadata: Associated metadata
+        """
+        # Store full metadata including text for retrieval
+        full_metadata = {**metadata, "text": text}
+        self.documents.append(full_metadata)
+    
+    def search(self, query: str, k: int = 5) -> list[dict[str, Any]]:
+        """
+        Search for documents matching the query using simple keyword matching.
+        
+        Args:
+            query: Search query string
+            k: Number of results to return
+        
+        Returns:
+            List of dicts with 'score' and 'metadata' keys
+        """
+        if not self.documents:
+            return []
+        
+        query_terms = query.lower().split()
+        if not query_terms:
+            return []
+        
+        # Simple scoring: count how many query terms appear in each document
+        scored_docs = []
+        for doc in self.documents:
+            text_lower = doc["text"].lower()
+            score = 0
+            for term in query_terms:
+                if term in text_lower:
+                    score += 1
+            
+            if score > 0:
+                scored_docs.append({
+                    "score": float(score),
+                    "metadata": doc
+                })
+        
+        # Sort by score (descending) and return top k
+        scored_docs.sort(key=lambda x: x["score"], reverse=True)
+        return scored_docs[:k]
 
