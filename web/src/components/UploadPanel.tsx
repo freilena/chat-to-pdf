@@ -7,13 +7,21 @@ export function UploadPanel() {
   const [sessionId, setSessionId] = React.useState<string | null>(null);
   const [filesIndexed, setFilesIndexed] = React.useState<number>(0);
   const [totalFiles, setTotalFiles] = React.useState<number>(0);
+  const [error, setError] = React.useState<string | null>(null);
 
   async function onUpload() {
     if (!files || files.length === 0) return;
     setIsIndexing(true);
+    setError(null);
     const form = new FormData();
     Array.from(files).forEach((f) => form.append('files', f));
     const upRes = await fetch('/api/upload', { method: 'POST', body: form });
+    if (!upRes.ok) {
+      const msg = await upRes.text();
+      setIsIndexing(false);
+      setError(msg || 'Upload failed');
+      return;
+    }
     const upJson = await upRes.json();
     setSessionId(upJson.session_id);
     setFilesIndexed(0);
@@ -33,18 +41,55 @@ export function UploadPanel() {
 
   return (
     <div>
-      <input
-        type="file"
-        multiple
-        accept="application/pdf"
-        onChange={(e) => setFiles(e.target.files)}
-        aria-label="pdf-input"
-      />
+      {error && (
+        <div role="alert" style={{ background: '#ffecec', color: '#a10000', padding: 8, borderRadius: 6, marginBottom: 12 }}>
+          {error}
+        </div>
+      )}
+      <div
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => {
+          e.preventDefault();
+          setFiles(e.dataTransfer.files);
+        }}
+        style={{
+          border: '2px dashed #ccc',
+          background: '#fff',
+          padding: 16,
+          borderRadius: 8,
+          marginBottom: 12,
+        }}
+      >
+        <p style={{ margin: 0, color: '#555' }}>Drag & drop PDFs here, or choose files</p>
+        <input
+          type="file"
+          multiple
+          accept="application/pdf"
+          onChange={(e) => setFiles(e.target.files)}
+          aria-label="pdf-input"
+          style={{ display: 'block', marginTop: 8 }}
+        />
+      </div>
+      {files && files.length > 0 && (
+        <ul style={{ padding: 0, listStyle: 'none', marginBottom: 12 }}>
+          {Array.from(files).map((f) => (
+            <li key={f.name} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px solid #eee' }}>
+              <span>{f.name}</span>
+              <span style={{ color: '#888' }}>{(f.size / (1024 * 1024)).toFixed(2)} MB</span>
+            </li>
+          ))}
+        </ul>
+      )}
       <button onClick={onUpload} disabled={!files || isIndexing} aria-label="upload-btn">
         {isIndexing ? 'Indexing…' : 'Upload'}
       </button>
       {isIndexing && (
-        <div aria-label="progress">{`Indexing ${filesIndexed}/${totalFiles}`}</div>
+        <div aria-label="progress" style={{ marginTop: 8 }}>
+          <div style={{ height: 6, background: '#eee', borderRadius: 4, overflow: 'hidden' }}>
+            <div style={{ width: `${totalFiles ? (filesIndexed / totalFiles) * 100 : 0}%`, height: '100%', background: '#111' }} />
+          </div>
+          <div style={{ fontSize: 12, color: '#666', marginTop: 4 }}>{`Indexing ${filesIndexed}/${totalFiles}`}</div>
+        </div>
       )}
       <button disabled={isIndexing} aria-label="chat-btn">Ask</button>
       {sessionId && <div aria-label="session-id">{sessionId}</div>}
