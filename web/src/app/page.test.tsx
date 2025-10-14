@@ -45,6 +45,8 @@ describe('UploadPanel', () => {
     fireEvent.click(uploadBtn);
 
     await waitFor(() => expect(chatBtn.disabled).toBe(true));
+    // Shows progress indicator
+    expect(screen.getByLabelText('progress')).toHaveTextContent('Indexing');
     await waitFor(() => expect(screen.getByLabelText('session-id')).toHaveTextContent('s123'));
     await waitFor(() => expect(chatBtn.disabled).toBe(false));
   });
