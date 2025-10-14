@@ -31,10 +31,21 @@ export default function RootLayout({
           </div>
         </header>
         <main>
+          <section className="hero">
+            <div className="container" style={{ padding: '24px 0' }}>
+              <h2 className="section-title">Upload PDFs. Ask questions.</h2>
+              <p className="section-subtitle">Grounded answers with inline citations and a viewer.</p>
+            </div>
+          </section>
           <div className="container" style={{ padding: '16px 0' }}>
             {children}
           </div>
         </main>
+        <footer style={{ borderTop: '1px solid var(--border)', marginTop: 24 }}>
+          <div className="container" style={{ padding: '12px 0', color: 'var(--muted)', fontSize: 12 }}>
+            © {new Date().getFullYear()} Chat to Your PDF
+          </div>
+        </footer>
       </body>
     </html>
   );
