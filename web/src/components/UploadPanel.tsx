@@ -40,7 +40,7 @@ export function UploadPanel() {
   }
 
   return (
-    <div>
+    <div className="card">
       {error && (
         <div role="alert" style={{ background: '#ffecec', color: '#a10000', padding: 8, borderRadius: 6, marginBottom: 12 }}>
           {error}
@@ -80,7 +80,7 @@ export function UploadPanel() {
           ))}
         </ul>
       )}
-      <button onClick={onUpload} disabled={!files || isIndexing} aria-label="upload-btn">
+      <button className={`btn ${!isIndexing ? 'btn-primary' : ''}`} onClick={onUpload} disabled={!files || isIndexing} aria-label="upload-btn">
         {isIndexing ? 'Indexing…' : 'Upload'}
       </button>
       {isIndexing && (

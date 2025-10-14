@@ -27,6 +27,52 @@ body {
   box-sizing: border-box;
 }
 
+:root {
+  --bg: #fafafa;
+  --fg: #111;
+  --muted: #666;
+  --border: #eaeaea;
+  --card: #fff;
+  --primary: #111;
+  --primary-fg: #fff;
+}
+
+.container {
+  max-width: 960px;
+  padding: 0 16px;
+  margin: 0 auto;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.btn {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--fg);
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.btn[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: var(--primary-fg);
+  border-color: var(--primary);
+}
+
+.muted { color: var(--muted); }
+
 body {
   color: var(--foreground);
   background: var(--background);
