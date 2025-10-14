@@ -8,6 +8,7 @@ from typing import Dict
 from fastapi import FastAPI, File, UploadFile, Query, HTTPException
 from fastapi.responses import JSONResponse
 from pypdf import PdfReader
+from pydantic import BaseModel
 
 app = FastAPI(title="Chat-To-PDF API")
 
@@ -115,4 +116,31 @@ async def index_status(session_id: str = Query(...)):
             "total_files": state["total_files"],
             "files_indexed": state["files_indexed"],
         }
+    )
+
+
+class QueryRequest(BaseModel):
+    session_id: str
+    question: str
+
+
+class Citation(BaseModel):
+    file: str
+    page: int
+    sentenceSpan: tuple[int, int]
+    id: str
+
+
+class QueryResponse(BaseModel):
+    answer: str
+    citations: list[Citation]
+
+
+@app.post("/fastapi/query")
+async def query(req: QueryRequest) -> QueryResponse:
+    # Minimal implementation: return stub response
+    # TODO: implement hybrid retrieval + Ollama inference
+    return QueryResponse(
+        answer="Not found in your files.",
+        citations=[]
     )
