@@ -1,0 +1,53 @@
+import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+// Intentionally import component that does not exist yet per TDD
+import { UploadPanel } from '@/components/UploadPanel';
+
+describe('UploadPanel', () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+  });
+
+  it('disables chat during indexing and shows session id', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({ session_id: 's123', totals: { files: 1, bytes: 7 } }),
+          { status: 200 },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({ status: 'indexing', total_files: 1, files_indexed: 0 }),
+          { status: 200 },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({ status: 'done', total_files: 1, files_indexed: 1 }),
+          { status: 200 },
+        ),
+      );
+    (globalThis as any).fetch = fetchMock;
+
+    render(<UploadPanel />);
+
+    const input = screen.getByLabelText('pdf-input') as HTMLInputElement;
+    const file = new File([new Blob(['%PDF-1.4'])], 'a.pdf', { type: 'application/pdf' });
+    Object.defineProperty(input, 'files', { value: { 0: file, length: 1, item: () => file } });
+    // Fire change to simulate user selecting files
+    fireEvent.change(input);
+
+    const uploadBtn = screen.getByLabelText('upload-btn');
+    const chatBtn = screen.getByLabelText('chat-btn') as HTMLButtonElement;
+
+    fireEvent.click(uploadBtn);
+
+    await waitFor(() => expect(chatBtn.disabled).toBe(true));
+    await waitFor(() => expect(screen.getByLabelText('session-id')).toHaveTextContent('s123'));
+    await waitFor(() => expect(chatBtn.disabled).toBe(false));
+  });
+});
+
+
