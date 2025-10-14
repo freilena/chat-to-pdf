@@ -2,6 +2,10 @@
 from __future__ import annotations
 
 import tiktoken
+from sentence_transformers import SentenceTransformer
+
+# Global embedder instance (lazy-loaded)
+_embedder = None
 
 
 def chunk_text(
@@ -51,4 +55,38 @@ def chunk_text(
             break
     
     return chunks
+
+
+def get_embedder() -> SentenceTransformer:
+    """
+    Get or initialize the embedding model (bge-small-en).
+    
+    Returns:
+        SentenceTransformer model instance
+    """
+    global _embedder
+    if _embedder is None:
+        # Use BGE-small-en as specified in the spec
+        _embedder = SentenceTransformer("BAAI/bge-small-en-v1.5")
+    return _embedder
+
+
+def embed_texts(texts: list[str]) -> list[list[float]]:
+    """
+    Generate embeddings for a list of texts.
+    
+    Args:
+        texts: List of text strings to embed
+    
+    Returns:
+        List of embedding vectors (each vector is a list of floats)
+    """
+    if not texts:
+        return []
+    
+    embedder = get_embedder()
+    embeddings = embedder.encode(texts, convert_to_numpy=True)
+    
+    # Convert numpy arrays to lists for JSON serialization
+    return [emb.tolist() for emb in embeddings]
 
