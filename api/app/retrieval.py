@@ -1,8 +1,11 @@
 """Retrieval functionality: chunking, embeddings, FAISS, Tantivy."""
 from __future__ import annotations
 
+import numpy as np
+import faiss
 import tiktoken
 from sentence_transformers import SentenceTransformer
+from typing import Any
 
 # Global embedder instance (lazy-loaded)
 _embedder = None
@@ -89,4 +92,66 @@ def embed_texts(texts: list[str]) -> list[list[float]]:
     
     # Convert numpy arrays to lists for JSON serialization
     return [emb.tolist() for emb in embeddings]
+
+
+class VectorIndex:
+    """FAISS-based vector index for semantic search."""
+    
+    def __init__(self, dimension: int = 384):
+        """
+        Initialize FAISS index.
+        
+        Args:
+            dimension: Dimension of embedding vectors (384 for bge-small-en)
+        """
+        self.dimension = dimension
+        # Use L2 distance (can also use Inner Product for cosine similarity)
+        self.index = faiss.IndexFlatL2(dimension)
+        self.metadata: list[dict[str, Any]] = []
+    
+    def add(self, vector: list[float], metadata: dict[str, Any]) -> None:
+        """
+        Add a vector to the index with associated metadata.
+        
+        Args:
+            vector: Embedding vector
+            metadata: Associated metadata (text, doc_id, chunk_id, etc.)
+        """
+        vec_array = np.array([vector], dtype=np.float32)
+        self.index.add(vec_array)
+        self.metadata.append(metadata)
+    
+    def search(self, query_vector: list[float], k: int = 5) -> list[dict[str, Any]]:
+        """
+        Search for k nearest neighbors.
+        
+        Args:
+            query_vector: Query embedding vector
+            k: Number of results to return
+        
+        Returns:
+            List of dicts with 'score' and 'metadata' keys
+        """
+        if self.size() == 0:
+            return []
+        
+        # Adjust k if larger than index size
+        k = min(k, self.size())
+        
+        query_array = np.array([query_vector], dtype=np.float32)
+        distances, indices = self.index.search(query_array, k)
+        
+        results = []
+        for dist, idx in zip(distances[0], indices[0]):
+            if idx != -1:  # Valid index
+                results.append({
+                    "score": float(dist),
+                    "metadata": self.metadata[idx]
+                })
+        
+        return results
+    
+    def size(self) -> int:
+        """Return the number of vectors in the index."""
+        return self.index.ntotal
 
