@@ -9,11 +9,13 @@ from fastapi import FastAPI, File, UploadFile, Query, HTTPException
 from fastapi.responses import JSONResponse
 from pypdf import PdfReader
 from pydantic import BaseModel
+from app.retrieval import HybridRetriever, chunk_text
 
 app = FastAPI(title="Chat-To-PDF API")
 
 # In-memory session store for MVP/TDD
 SESSION_STATUS: Dict[str, Dict[str, int | str]] = {}
+SESSION_RETRIEVERS: Dict[str, HybridRetriever] = {}
 
 # Limits from spec
 MAX_FILES_PER_SESSION = 10
@@ -77,15 +79,45 @@ async def upload_files(files: list[UploadFile] = File(...)):
         "files_indexed": 0,
     }
 
-    # Background simulate indexing progress (per file)
-    async def do_indexing(sid: str, count: int) -> None:
+    # Create hybrid retriever for this session
+    retriever = HybridRetriever()
+    SESSION_RETRIEVERS[session_id] = retriever
+
+    # Background indexing: process PDFs and add to retriever
+    async def do_indexing(sid: str, file_buffers: list[tuple[str, bytes]]) -> None:
         try:
-            for i in range(count):
-                await asyncio.sleep(0.1)
+            for i, (filename, data) in enumerate(file_buffers):
+                # Extract text from PDF
+                reader = PdfReader(io.BytesIO(data))
+                full_text = ""
+                for page_num, page in enumerate(reader.pages):
+                    try:
+                        page_text = page.extract_text() or ""
+                        full_text += page_text + "\n"
+                    except Exception:
+                        continue
+                
+                # Chunk the text
+                chunks = chunk_text(full_text)
+                
+                # Add each chunk to the retriever
+                for chunk_idx, chunk in enumerate(chunks):
+                    metadata = {
+                        "doc_id": filename,
+                        "chunk_id": chunk_idx,
+                        "page": 1,  # Simplified for MVP
+                        "sentenceSpan": (0, len(chunk["text"])),  # Simplified
+                    }
+                    retriever.add_document(chunk["text"], metadata)
+                
+                # Update progress
                 state = SESSION_STATUS.get(sid)
                 if not state:
                     return
                 state["files_indexed"] = i + 1
+                await asyncio.sleep(0.1)  # Small delay to show progress
+            
+            # Mark as done
             state = SESSION_STATUS.get(sid)
             if state:
                 state["status"] = "done"
@@ -94,7 +126,7 @@ async def upload_files(files: list[UploadFile] = File(...)):
             if state:
                 state["status"] = "error"
 
-    asyncio.create_task(do_indexing(session_id, len(files)))
+    asyncio.create_task(do_indexing(session_id, file_buffers))
 
     return JSONResponse(
         {
@@ -138,9 +170,45 @@ class QueryResponse(BaseModel):
 
 @app.post("/fastapi/query")
 async def query(req: QueryRequest) -> QueryResponse:
-    # Minimal implementation: return stub response
-    # TODO: implement hybrid retrieval + Ollama inference
+    # Check if session exists and is ready
+    session_state = SESSION_STATUS.get(req.session_id)
+    if not session_state:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    if session_state["status"] != "done":
+        raise HTTPException(status_code=400, detail="Session still indexing")
+    
+    # Get the retriever for this session
+    retriever = SESSION_RETRIEVERS.get(req.session_id)
+    if not retriever:
+        raise HTTPException(status_code=404, detail="Session retriever not found")
+    
+    # Search for relevant chunks
+    search_results = retriever.search(req.question, k=5)
+    
+    if not search_results:
+        return QueryResponse(
+            answer="Not found in your files.",
+            citations=[]
+        )
+    
+    # For MVP, return a simple answer based on the top result
+    # TODO: Integrate with Ollama for proper answer generation
+    top_result = search_results[0]
+    answer = f"Based on your files: {top_result['metadata']['text'][:200]}..."
+    
+    # Convert search results to citations
+    citations = []
+    for i, result in enumerate(search_results[:3]):  # Max 3 citations
+        citation = Citation(
+            file=result["metadata"]["doc_id"],
+            page=result["metadata"]["page"],
+            sentenceSpan=result["metadata"]["sentenceSpan"],
+            id=f"citation_{i+1}"
+        )
+        citations.append(citation)
+    
     return QueryResponse(
-        answer="Not found in your files.",
-        citations=[]
+        answer=answer,
+        citations=citations
     )
