@@ -15,11 +15,7 @@ interface SessionProviderProps {
 
 export function SessionProvider({ children }: SessionProviderProps) {
   return (
-    <NextAuthSessionProvider
-      // Add error handling for development mode
-      refetchInterval={0}
-      refetchOnWindowFocus={false}
-    >
+    <NextAuthSessionProvider>
       {children}
     </NextAuthSessionProvider>
   );

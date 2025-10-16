@@ -17,18 +17,18 @@ try {
 } catch (error) {
   console.error('Failed to load OAuth configuration:', error);
   // In development, provide fallback configuration
-  if (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) {
+  if (process.env.NODE_ENV === 'development') {
     oauthConfig = {
       google: {
-        clientId: process.env.GOOGLE_CLIENT_ID || '123456789012345678901.apps.googleusercontent.com',
-        clientSecret: process.env.GOOGLE_CLIENT_SECRET || 'GOCSPX-1234567890abcdefghijklmnopqrstuvwxyz',
+        clientId: process.env.GOOGLE_CLIENT_ID || 'placeholder',
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET || 'placeholder',
       },
       apple: {
-        clientId: process.env.APPLE_CLIENT_ID || 'com.yourcompany.chattopdf',
-        clientSecret: process.env.APPLE_CLIENT_SECRET || 'abcdefghijklmnopqrstuvwxyz1234567890',
+        clientId: process.env.APPLE_CLIENT_ID || 'placeholder',
+        clientSecret: process.env.APPLE_CLIENT_SECRET || 'placeholder',
       },
       nextAuth: {
-        secret: process.env.NEXTAUTH_SECRET || 'abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuvwxyz1234567890',
+        secret: process.env.NEXTAUTH_SECRET || 'development-secret-key',
         url: process.env.NEXTAUTH_URL || 'http://localhost:3001',
       },
     };
@@ -42,8 +42,6 @@ const handler = NextAuth({
     Google({
       clientId: oauthConfig.google.clientId,
       clientSecret: oauthConfig.google.clientSecret,
-      // Add development mode configuration
-      allowDangerousEmailAccountLinking: process.env.NODE_ENV === 'development',
     }),
   ],
   secret: oauthConfig.nextAuth.secret,
