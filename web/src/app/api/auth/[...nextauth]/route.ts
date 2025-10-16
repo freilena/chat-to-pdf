@@ -10,8 +10,32 @@ import Google from 'next-auth/providers/google';
 import { getOAuthConfig } from '@/lib/auth/config';
 import { createSessionData, generateSessionToken, hashSessionToken } from '@/lib/auth/session';
 
-// Get OAuth configuration
-const oauthConfig = getOAuthConfig();
+// Get OAuth configuration with error handling
+let oauthConfig;
+try {
+  oauthConfig = getOAuthConfig();
+} catch (error) {
+  console.error('Failed to load OAuth configuration:', error);
+  // In development, provide fallback configuration
+  if (process.env.NODE_ENV === 'development') {
+    oauthConfig = {
+      google: {
+        clientId: process.env.GOOGLE_CLIENT_ID || 'placeholder',
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET || 'placeholder',
+      },
+      apple: {
+        clientId: process.env.APPLE_CLIENT_ID || 'placeholder',
+        clientSecret: process.env.APPLE_CLIENT_SECRET || 'placeholder',
+      },
+      nextAuth: {
+        secret: process.env.NEXTAUTH_SECRET || 'development-secret-key',
+        url: process.env.NEXTAUTH_URL || 'http://localhost:3001',
+      },
+    };
+  } else {
+    throw error;
+  }
+}
 
 const handler = NextAuth({
   providers: [
