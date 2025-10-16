@@ -43,11 +43,7 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
-        if (result.error === 'OAuthCallback') {
-          setError('OAuth setup required: Please configure real Google OAuth credentials in your environment variables. Current credentials are placeholders for development.');
-        } else {
-          setError('Failed to sign in with Google. Please try again.');
-        }
+        setError('Failed to sign in with Google. Please try again.');
       } else if (result?.ok) {
         router.push('/');
       }
@@ -68,12 +64,6 @@ export default function LoginPage() {
           <p className="mt-2 text-center text-sm text-gray-600">
             Upload and chat with your PDF documents
           </p>
-          <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
-            <p className="text-sm text-yellow-800">
-              <strong>Development Mode:</strong> OAuth credentials are currently set to placeholder values. 
-              To test authentication, please set up real Google OAuth credentials in your environment variables.
-            </p>
-          </div>
         </div>
         
         <div className="mt-8 space-y-6">

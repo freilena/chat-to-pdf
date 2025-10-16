@@ -42,11 +42,13 @@ const handler = NextAuth({
     Google({
       clientId: oauthConfig.google.clientId,
       clientSecret: oauthConfig.google.clientSecret,
+      // Add development mode configuration
+      allowDangerousEmailAccountLinking: process.env.NODE_ENV === 'development',
     }),
   ],
   secret: oauthConfig.nextAuth.secret,
   callbacks: {
-    async signIn({ user, account }) {
+    async signIn({ user, account, profile }) {
       // Allow sign in for Google provider
       if (account?.provider === 'google') {
         return true;
