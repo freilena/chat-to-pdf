@@ -52,4 +52,136 @@ describe('AssistantMessage', () => {
     });
     expect(screen.getByText(expectedTime)).toBeInTheDocument();
   });
+
+  it('renders with proper structure when loading', () => {
+    const timestamp = new Date();
+    render(<AssistantMessage message="Test" timestamp={timestamp} isLoading={true} />);
+    
+    const messageElement = screen.getByTestId('assistant-message');
+    const typingIndicator = screen.getByTestId('typing-indicator');
+    const timestampElement = screen.getByText(timestamp.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    }));
+    
+    expect(messageElement).toContainElement(typingIndicator);
+    expect(messageElement).toContainElement(timestampElement);
+    expect(typingIndicator).toHaveClass('typing-indicator');
+  });
+
+  it('renders with proper structure when not loading', () => {
+    const message = 'Test response';
+    const timestamp = new Date();
+    render(<AssistantMessage message={message} timestamp={timestamp} isLoading={false} />);
+    
+    const messageElement = screen.getByTestId('assistant-message');
+    const contentElement = screen.getByText(message);
+    const timestampElement = screen.getByText(timestamp.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    }));
+    
+    expect(messageElement).toContainElement(contentElement);
+    expect(messageElement).toContainElement(timestampElement);
+    expect(contentElement).toHaveClass('message-content');
+    expect(timestampElement).toHaveClass('message-timestamp');
+  });
+
+  it('handles empty message when loading', () => {
+    render(<AssistantMessage message="" timestamp={new Date()} isLoading={true} />);
+    
+    expect(screen.getByTestId('typing-indicator')).toBeInTheDocument();
+    expect(screen.getByText('AI is thinking...')).toBeInTheDocument();
+  });
+
+  it('handles empty message when not loading', () => {
+    render(<AssistantMessage message="" timestamp={new Date()} isLoading={false} />);
+    
+    const messageElement = screen.getByTestId('assistant-message');
+    expect(messageElement).toBeInTheDocument();
+    // Check that the message content div exists even with empty content
+    const contentElement = messageElement.querySelector('.message-content');
+    expect(contentElement).toBeInTheDocument();
+  });
+
+  it('shows typing indicator with correct structure', () => {
+    render(<AssistantMessage message="" timestamp={new Date()} isLoading={true} />);
+    
+    const typingIndicator = screen.getByTestId('typing-indicator');
+    const typingDots = typingIndicator.querySelector('.typing-dots');
+    const typingText = screen.getByText('AI is thinking...');
+    
+    expect(typingIndicator).toHaveClass('typing-indicator');
+    expect(typingDots).toBeInTheDocument();
+    expect(typingText).toHaveClass('typing-text');
+    
+    // Check that typing dots are present
+    const dots = typingDots?.querySelectorAll('span');
+    expect(dots).toHaveLength(3);
+  });
+
+  it('handles long messages with proper wrapping', () => {
+    const longMessage = 'This is a very long assistant response that should wrap properly and not overflow the container or cause any layout issues in the chat interface. It should handle multiple lines gracefully.';
+    render(<AssistantMessage message={longMessage} timestamp={new Date()} />);
+    
+    const messageElement = screen.getByText(longMessage);
+    expect(messageElement).toHaveClass('message-content');
+  });
+
+  it('handles special characters in message', () => {
+    const specialMessage = 'Response with special chars: @#$%^&*()_+-=[]{}|;:,.<>?';
+    render(<AssistantMessage message={specialMessage} timestamp={new Date()} />);
+    
+    expect(screen.getByText(specialMessage)).toBeInTheDocument();
+  });
+
+  it('handles multiline messages', () => {
+    const multilineMessage = 'Line 1\nLine 2\nLine 3';
+    render(<AssistantMessage message={multilineMessage} timestamp={new Date()} />);
+    
+    // Check that the multiline content is rendered correctly
+    const messageElement = screen.getByTestId('assistant-message');
+    const contentElement = messageElement.querySelector('.message-content');
+    expect(contentElement?.textContent).toBe(multilineMessage);
+  });
+
+  it('formats different time formats correctly', () => {
+    const testCases = [
+      new Date('2024-01-01T00:00:00Z'), // Midnight
+      new Date('2024-01-01T12:00:00Z'), // Noon
+      new Date('2024-01-01T23:59:59Z'), // End of day
+    ];
+
+    testCases.forEach((timestamp, index) => {
+      const { unmount } = render(<AssistantMessage message={`Test ${index}`} timestamp={timestamp} />);
+      
+      const expectedTime = timestamp.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      });
+      expect(screen.getByText(expectedTime)).toBeInTheDocument();
+      
+      unmount();
+    });
+  });
+
+  it('has proper accessibility attributes', () => {
+    const message = 'Test response';
+    render(<AssistantMessage message={message} timestamp={new Date()} />);
+    
+    const messageElement = screen.getByTestId('assistant-message');
+    expect(messageElement).toBeInTheDocument();
+    expect(messageElement).toBeVisible();
+  });
+
+  it('defaults to not loading when isLoading prop is not provided', () => {
+    const message = 'Test response';
+    render(<AssistantMessage message={message} timestamp={new Date()} />);
+    
+    expect(screen.getByText(message)).toBeInTheDocument();
+    expect(screen.queryByTestId('typing-indicator')).not.toBeInTheDocument();
+  });
 });
