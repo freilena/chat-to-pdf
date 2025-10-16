@@ -7,6 +7,7 @@
 
 import NextAuth from 'next-auth';
 import Google from 'next-auth/providers/google';
+import Apple from 'next-auth/providers/apple';
 import { getOAuthConfig } from '@/lib/auth/config';
 import { createSessionData, generateSessionToken, hashSessionToken } from '@/lib/auth/session';
 
@@ -43,12 +44,16 @@ const handler = NextAuth({
       clientId: oauthConfig.google.clientId,
       clientSecret: oauthConfig.google.clientSecret,
     }),
+    Apple({
+      clientId: oauthConfig.apple.clientId,
+      clientSecret: oauthConfig.apple.clientSecret,
+    }),
   ],
   secret: oauthConfig.nextAuth.secret,
   callbacks: {
     async signIn({ user, account }) {
-      // Allow sign in for Google provider
-      if (account?.provider === 'google') {
+      // Allow sign in for Google and Apple providers
+      if (account?.provider === 'google' || account?.provider === 'apple') {
         return true;
       }
       return false;
@@ -56,14 +61,14 @@ const handler = NextAuth({
     async session({ session, token }) {
       // Add session_id to the session object
       if (token?.sessionId) {
-        session.sessionId = token.sessionId as string;
+        (session as any).sessionId = token.sessionId as string;
       }
       return session;
     },
     async jwt({ token, user, account }) {
       // Generate session data on first sign in
       if (user && account) {
-        const sessionData = createSessionData(user.id, account.provider as 'google' | 'apple');
+        const sessionData = createSessionData(user.id || 'unknown', account.provider as 'google' | 'apple');
         const sessionToken = generateSessionToken();
         
         // Store session data in token
