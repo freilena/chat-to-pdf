@@ -5,39 +5,29 @@
  * Protects all routes except login and API routes.
  */
 
-import { withAuth } from 'next-auth/middleware';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { getToken } from 'next-auth/jwt';
 
-export default withAuth(
-  function middleware(req) {
-    // Allow access to login page and API routes
-    if (req.nextUrl.pathname.startsWith('/login') || 
-        req.nextUrl.pathname.startsWith('/api/')) {
-      return NextResponse.next();
-    }
-
-    // For all other routes, check if user is authenticated
-    if (!req.nextauth.token) {
-      return NextResponse.redirect(new URL('/login', req.url));
-    }
-
+export async function middleware(request: NextRequest) {
+  // Allow access to login page and API routes
+  if (request.nextUrl.pathname.startsWith('/login') || 
+      request.nextUrl.pathname.startsWith('/api/')) {
     return NextResponse.next();
-  },
-  {
-    callbacks: {
-      authorized: ({ token, req }) => {
-        // Allow access to login page and API routes
-        if (req.nextUrl.pathname.startsWith('/login') || 
-            req.nextUrl.pathname.startsWith('/api/')) {
-          return true;
-        }
-        
-        // Require authentication for all other routes
-        return !!token;
-      },
-    },
   }
-);
+
+  // Get the token from the request
+  const token = await getToken({ 
+    req: request,
+    secret: process.env.NEXTAUTH_SECRET 
+  });
+
+  // If no token, redirect to login
+  if (!token) {
+    return NextResponse.redirect(new URL('/login', request.url));
+  }
+
+  return NextResponse.next();
+}
 
 export const config = {
   matcher: [
