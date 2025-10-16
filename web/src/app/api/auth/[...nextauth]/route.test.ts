@@ -82,22 +82,4 @@ describe('NextAuth API Route', () => {
       expect(typeof POST).toBe('object');
     });
   });
-
-  describe('Apple OAuth provider', () => {
-    it('should be configured with Apple provider', () => {
-      // This test verifies that the NextAuth configuration includes Apple provider
-      // The actual provider configuration is tested through the NextAuth setup
-      expect(GET).toBeDefined();
-      expect(POST).toBeDefined();
-    });
-  });
-
-  describe('Session creation consistency', () => {
-    it('should create identical session structures for both providers', () => {
-      // This test verifies that both Google and Apple providers create the same session structure
-      // The session creation logic is tested in the session utilities
-      expect(GET).toBeDefined();
-      expect(POST).toBeDefined();
-    });
-  });
 });

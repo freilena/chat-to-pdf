@@ -8,14 +8,12 @@ import { useRouter } from 'next/navigation';
 import { signIn, getSession } from 'next-auth/react';
 import LoginPage from './page';
 
-// Mock Next.js router
+// Mock next/navigation
 vi.mock('next/navigation', () => ({
-  useRouter: vi.fn(() => ({
-    push: vi.fn(),
-  })),
+  useRouter: vi.fn(),
 }));
 
-// Mock NextAuth
+// Mock next-auth/react
 vi.mock('next-auth/react', () => ({
   signIn: vi.fn(),
   getSession: vi.fn(),
@@ -23,132 +21,95 @@ vi.mock('next-auth/react', () => ({
 
 describe('LoginPage', () => {
   const mockPush = vi.fn();
-  const mockSignIn = vi.fn();
-  const mockGetSession = vi.fn();
+  const mockSignIn = signIn as any;
+  const mockGetSession = getSession as any;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useRouter as any).mockReturnValue({ push: mockPush });
-    (signIn as any).mockImplementation(mockSignIn);
-    (getSession as any).mockImplementation(mockGetSession);
-  });
-
-  describe('Rendering', () => {
-    it('should render login page with both Google and Apple buttons', () => {
-      render(<LoginPage />);
-      
-      expect(screen.getByText('Sign in to Chat to Your PDF')).toBeInTheDocument();
-      expect(screen.getByText('Sign in with Google')).toBeInTheDocument();
-      expect(screen.getByText('Sign in with Apple')).toBeInTheDocument();
-    });
-
-    it('should show development mode warning', () => {
-      render(<LoginPage />);
-      
-      expect(screen.getByText('Development Mode:')).toBeInTheDocument();
-      expect(screen.getByText(/OAuth credentials are currently set to placeholder values/)).toBeInTheDocument();
+    (useRouter as any).mockReturnValue({
+      push: mockPush,
     });
   });
 
-  describe('Google OAuth', () => {
-    it('should handle Google sign in successfully', async () => {
-      mockSignIn.mockResolvedValue({ ok: true });
-      
-      render(<LoginPage />);
-      
-      const googleButton = screen.getByRole('button', { name: /sign in with google/i });
-      fireEvent.click(googleButton);
-      
-      await waitFor(() => {
-        expect(mockSignIn).toHaveBeenCalledWith('google', {
-          redirect: false,
-          callbackUrl: '/',
-        });
-        expect(mockPush).toHaveBeenCalledWith('/');
-      });
-    });
+  it('should render login form', () => {
+    mockGetSession.mockResolvedValue(null);
+    
+    render(<LoginPage />);
+    
+    expect(screen.getByText('Sign in to Chat to Your PDF')).toBeInTheDocument();
+    expect(screen.getByText('Upload and chat with your PDF documents')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /sign in with google/i })).toBeInTheDocument();
+  });
 
-    it('should handle Google sign in error', async () => {
-      mockSignIn.mockResolvedValue({ error: 'OAuthCallback' });
-      
-      render(<LoginPage />);
-      
-      const googleButton = screen.getByRole('button', { name: /sign in with google/i });
-      fireEvent.click(googleButton);
-      
-      await waitFor(() => {
-        expect(screen.getByText(/OAuth setup required/)).toBeInTheDocument();
-      });
+  it('should redirect authenticated users', async () => {
+    mockGetSession.mockResolvedValue({ user: { id: '123' } });
+    
+    render(<LoginPage />);
+    
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith('/');
     });
   });
 
-  describe('Apple OAuth', () => {
-    it('should handle Apple sign in successfully', async () => {
-      mockSignIn.mockResolvedValue({ ok: true });
-      
-      render(<LoginPage />);
-      
-      const appleButton = screen.getByRole('button', { name: /sign in with apple/i });
-      fireEvent.click(appleButton);
-      
-      await waitFor(() => {
-        expect(mockSignIn).toHaveBeenCalledWith('apple', {
-          redirect: false,
-          callbackUrl: '/',
-        });
-        expect(mockPush).toHaveBeenCalledWith('/');
+  it('should handle Google sign in', async () => {
+    mockGetSession.mockResolvedValue(null);
+    mockSignIn.mockResolvedValue({ ok: true });
+    
+    render(<LoginPage />);
+    
+    const signInButton = screen.getByRole('button', { name: /sign in with google/i });
+    fireEvent.click(signInButton);
+    
+    await waitFor(() => {
+      expect(mockSignIn).toHaveBeenCalledWith('google', {
+        redirect: false,
+        callbackUrl: '/',
       });
     });
-
-    it('should handle Apple sign in error', async () => {
-      mockSignIn.mockResolvedValue({ error: 'OAuthCallback' });
-      
-      render(<LoginPage />);
-      
-      const appleButton = screen.getByRole('button', { name: /sign in with apple/i });
-      fireEvent.click(appleButton);
-      
-      await waitFor(() => {
-        expect(screen.getByText(/OAuth setup required/)).toBeInTheDocument();
-      });
+    
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith('/');
     });
   });
 
-  describe('Loading states', () => {
-    it('should show loading state during Google sign in', async () => {
-      mockSignIn.mockImplementation(() => new Promise(resolve => setTimeout(() => resolve({ ok: true }), 100)));
-      
-      render(<LoginPage />);
-      
-      const googleButton = screen.getByRole('button', { name: /sign in with google/i });
-      fireEvent.click(googleButton);
-      
-      expect(screen.getAllByText('Signing in...')).toHaveLength(2);
-      expect(googleButton).toBeDisabled();
-    });
-
-    it('should show loading state during Apple sign in', async () => {
-      mockSignIn.mockImplementation(() => new Promise(resolve => setTimeout(() => resolve({ ok: true }), 100)));
-      
-      render(<LoginPage />);
-      
-      const appleButton = screen.getByRole('button', { name: /sign in with apple/i });
-      fireEvent.click(appleButton);
-      
-      expect(screen.getAllByText('Signing in...')).toHaveLength(2);
-      expect(appleButton).toBeDisabled();
+  it('should handle sign in error', async () => {
+    mockGetSession.mockResolvedValue(null);
+    mockSignIn.mockResolvedValue({ error: 'Sign in failed' });
+    
+    render(<LoginPage />);
+    
+    const signInButton = screen.getByRole('button', { name: /sign in with google/i });
+    fireEvent.click(signInButton);
+    
+    await waitFor(() => {
+      expect(screen.getByText('Failed to sign in with Google. Please try again.')).toBeInTheDocument();
     });
   });
 
-  describe('Session check', () => {
-    it('should redirect authenticated users', async () => {
-      mockGetSession.mockResolvedValue({ user: { id: 'test-user' } });
-      
-      render(<LoginPage />);
-      
-      await waitFor(() => {
-        expect(mockPush).toHaveBeenCalledWith('/');
-      });
+  it('should show loading state during sign in', async () => {
+    mockGetSession.mockResolvedValue(null);
+    mockSignIn.mockImplementation(() => new Promise(resolve => setTimeout(() => resolve({ ok: true }), 100)));
+    
+    render(<LoginPage />);
+    
+    const signInButton = screen.getByRole('button', { name: /sign in with google/i });
+    fireEvent.click(signInButton);
+    
+    expect(screen.getByText('Signing in...')).toBeInTheDocument();
+    expect(signInButton).toBeDisabled();
+  });
+
+  it('should handle unexpected errors', async () => {
+    mockGetSession.mockResolvedValue(null);
+    mockSignIn.mockRejectedValue(new Error('Network error'));
+    
+    render(<LoginPage />);
+    
+    const signInButton = screen.getByRole('button', { name: /sign in with google/i });
+    fireEvent.click(signInButton);
+    
+    await waitFor(() => {
+      expect(screen.getByText('An unexpected error occurred. Please try again.')).toBeInTheDocument();
     });
   });
 });

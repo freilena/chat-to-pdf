@@ -99,4 +99,3 @@ export function validateOAuthConfig(config: OAuthConfig): boolean {
 export function getOAuthConfig(): OAuthConfig {
   return loadOAuthConfig();
 }
-
