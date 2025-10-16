@@ -1,6 +1,5 @@
 import '@testing-library/jest-dom';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
 
 (() => {
   if (typeof (globalThis as any).File === 'undefined') {
@@ -17,22 +16,7 @@ import { http, HttpResponse } from 'msw';
   }
 })();
 
-export const server = setupServer(
-  // Mock API routes
-  http.get('http://localhost:3000/api/index/status', () => {
-    return HttpResponse.json({
-      status: 'done',
-      total_files: 1,
-      files_indexed: 1,
-    });
-  }),
-  http.post('http://localhost:3000/api/upload', () => {
-    return HttpResponse.json({
-      session_id: 'test-session-123',
-      totals: { files: 1, bytes: 1024 },
-    });
-  }),
-);
+export const server = setupServer();
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 afterEach(() => server.resetHandlers());
