@@ -3,33 +3,34 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { NextRequest } from 'next/server';
 
-// Mock next-auth/jwt
-const mockGetToken = vi.fn();
-vi.mock('next-auth/jwt', () => ({
-  getToken: mockGetToken,
+// Mock next-auth/middleware
+const mockWithAuth = vi.fn();
+vi.mock('next-auth/middleware', () => ({
+  withAuth: mockWithAuth,
 }));
 
 // Mock NextResponse
+const mockNextResponse = {
+  next: vi.fn(() => ({ type: 'next' })),
+  redirect: vi.fn((url) => ({ type: 'redirect', url })),
+};
+
 vi.mock('next/server', () => ({
-  NextResponse: {
-    next: vi.fn(() => ({ type: 'next' })),
-    redirect: vi.fn((url) => ({ type: 'redirect', url })),
-  },
-  NextRequest: class NextRequest {
-    constructor(public url: string) {}
-    get nextUrl() {
-      return {
-        pathname: new URL(this.url).pathname,
-      };
-    }
-  },
+  NextResponse: mockNextResponse,
 }));
 
 describe('Middleware', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    process.env.NEXTAUTH_SECRET = 'test-secret';
+  });
+
+  it('should be configured with withAuth', async () => {
+    // Import the middleware to trigger the withAuth call
+    await import('./middleware');
+    
+    expect(mockWithAuth).toHaveBeenCalled();
   });
 
   it('should have correct matcher configuration', async () => {
