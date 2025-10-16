@@ -1,12 +1,12 @@
 /**
- * NextAuth.js API Route Handler
+ * Auth.js API Route Handler
  * 
  * Handles OAuth authentication flows for Google and Apple providers.
  * Creates secure sessions and manages authentication state.
  */
 
 import NextAuth from 'next-auth';
-import GoogleProvider from 'next-auth/providers/google';
+import Google from 'next-auth/providers/google';
 import { getOAuthConfig } from '@/lib/auth/config';
 import { createSessionData, generateSessionToken, hashSessionToken } from '@/lib/auth/session';
 
@@ -15,7 +15,7 @@ const oauthConfig = getOAuthConfig();
 
 const handler = NextAuth({
   providers: [
-    GoogleProvider({
+    Google({
       clientId: oauthConfig.google.clientId,
       clientSecret: oauthConfig.google.clientSecret,
     }),

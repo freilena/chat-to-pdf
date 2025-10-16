@@ -1,7 +1,7 @@
 /**
  * Session Provider Wrapper
  * 
- * Provides NextAuth session context to the entire application.
+ * Provides Auth.js session context to the entire application.
  */
 
 'use client';
