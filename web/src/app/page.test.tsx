@@ -29,7 +29,7 @@ describe('UploadPanel', () => {
           { status: 200 },
         ),
       );
-    (globalThis as any).fetch = fetchMock;
+    (globalThis as unknown as { fetch: typeof fetch }).fetch = fetchMock;
 
     render(<UploadPanel />);
 
