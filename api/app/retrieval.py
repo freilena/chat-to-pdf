@@ -6,7 +6,6 @@ import tempfile
 import numpy as np
 import faiss
 import tiktoken
-import tantivy
 from sentence_transformers import SentenceTransformer
 from typing import Any
 
@@ -65,15 +64,15 @@ def chunk_text(
 
 def get_embedder() -> SentenceTransformer:
     """
-    Get or initialize the embedding model (bge-small-en).
+    Get or initialize the embedding model (all-MiniLM-L6-v2).
     
     Returns:
         SentenceTransformer model instance
     """
     global _embedder
     if _embedder is None:
-        # Use BGE-small-en as specified in the spec
-        _embedder = SentenceTransformer("BAAI/bge-small-en-v1.5")
+        # Use all-MiniLM-L6-v2 (lightweight, 80MB model with 384-dim embeddings)
+        _embedder = SentenceTransformer("all-MiniLM-L6-v2")
     return _embedder
 
 
@@ -105,7 +104,7 @@ class VectorIndex:
         Initialize FAISS index.
         
         Args:
-            dimension: Dimension of embedding vectors (384 for bge-small-en)
+            dimension: Dimension of embedding vectors (384 for all-MiniLM-L6-v2)
         """
         self.dimension = dimension
         # Use L2 distance (can also use Inner Product for cosine similarity)

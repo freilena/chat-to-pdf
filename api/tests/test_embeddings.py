@@ -13,7 +13,7 @@ def test_embed_texts_returns_vectors():
     embeddings = embed_texts(texts)
     
     assert len(embeddings) == len(texts)
-    # BGE-small-en produces 384-dimensional vectors
+    # all-MiniLM-L6-v2 produces 384-dimensional vectors
     assert len(embeddings[0]) == 384
     assert all(isinstance(val, float) for val in embeddings[0])
 

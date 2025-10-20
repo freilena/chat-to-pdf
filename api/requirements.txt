@@ -7,8 +7,10 @@ ruff==0.6.*
 pypdf==5.0.*
 python-multipart==0.0.*
 
-# Retrieval dependencies
+# Retrieval dependencies - all-MiniLM-L6-v2 compatible
 sentence-transformers==3.0.*
 faiss-cpu==1.8.*
-tantivy==0.22.*
 tiktoken==0.7.*
+
+# Skip tantivy for now - using simple keyword search
+# tantivy==0.22.*
