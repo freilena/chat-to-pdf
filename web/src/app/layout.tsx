@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import VersionBadge from "@/components/VersionBadge";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -46,6 +47,7 @@ export default function RootLayout({
             © {new Date().getFullYear()} Chat to Your PDF
           </div>
         </footer>
+        <VersionBadge />
       </body>
     </html>
   );

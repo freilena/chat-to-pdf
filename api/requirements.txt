@@ -12,5 +12,5 @@ sentence-transformers==3.0.*
 faiss-cpu==1.8.*
 tiktoken==0.7.*
 
-# Skip tantivy for now - using simple keyword search
+# Skip tantivy for MVP - using simple keyword search
 # tantivy==0.22.*
