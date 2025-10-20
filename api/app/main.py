@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Dict
 
 from fastapi import FastAPI, File, UploadFile, Query, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pypdf import PdfReader
 from pydantic import BaseModel
@@ -98,6 +99,15 @@ def get_git_info() -> dict[str, str | bool]:
 
 
 app = FastAPI(title="Chat-To-PDF API")
+
+# Configure CORS for frontend access
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # Frontend URL
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # In-memory session store for MVP/TDD
 SESSION_STATUS: Dict[str, Dict[str, int | str]] = {}
