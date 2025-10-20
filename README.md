@@ -7,9 +7,11 @@ A browser-based web application that enables users to chat with their PDF docume
 ### Implemented
 - **PDF Upload & Validation**: Drag-drop interface with file size limits (50MB per file, 100MB total)
 - **Text Extraction**: Automatic PDF text layer extraction with scanned PDF detection
-- **Hybrid Search**: Combines vector similarity (FAISS) and keyword search (BM25) for optimal retrieval
+- **Hybrid Search**: Combines vector similarity (FAISS) and keyword search for optimal retrieval
 - **Session Management**: Per-session data storage with automatic cleanup
-- **RESTful API**: FastAPI backend with comprehensive error handling
+- **RESTful API**: FastAPI backend with CORS support and comprehensive error handling
+- **Version Tracking**: Git-integrated version system with API endpoints and UI badge
+- **Optimized Build**: CPU-only PyTorch and lightweight embeddings (build time: ~15-20 min vs ~1 hour)
 
 ### Planned
 - **Chat Interface**: Interactive Q&A with inline citations
@@ -19,11 +21,12 @@ A browser-based web application that enables users to chat with their PDF docume
 ## Architecture
 
 - **Frontend**: Next.js (React) with TypeScript
-- **Backend**: FastAPI (Python) with hybrid retrieval system
-- **Vector Store**: FAISS for semantic search
-- **Keyword Search**: Tantivy for BM25 search
-- **Embeddings**: sentence-transformers (bge-small-en)
-- **Deployment**: Docker Compose with multi-service setup
+- **Backend**: FastAPI (Python) with hybrid retrieval system and CORS support
+- **Vector Store**: FAISS for semantic search (CPU-optimized)
+- **Keyword Search**: Simple keyword matching (MVP - Tantivy planned for future)
+- **Embeddings**: sentence-transformers with all-MiniLM-L6-v2 (80MB, 2x faster)
+- **PyTorch**: CPU-only build (~184MB vs 900MB GPU version)
+- **Deployment**: Docker Compose with optimized layer caching
 
 ## Quick Start
 
@@ -71,23 +74,31 @@ A browser-based web application that enables users to chat with their PDF docume
 - `POST /fastapi/upload` - Upload PDF files
 - `GET /fastapi/index/status` - Check indexing progress
 - `POST /fastapi/query` - Ask questions about uploaded documents
-- `GET /healthz` - Health check
+- `GET /healthz` - Health check (includes version)
+- `GET /version` - Version info (version, git branch, commit, date, environment)
 
 ## Testing
 
 Run the comprehensive test suite:
 
+**Backend Tests** (via Docker):
 ```bash
-cd api
-pytest tests/ -v
+docker compose exec api pytest -v
 ```
 
-**Test Coverage**: 32 tests covering:
+**Frontend Tests** (via Docker):
+```bash
+docker compose exec web npm run test
+```
+
+**Test Coverage**: 42+ tests covering:
 - PDF upload and validation
 - Text chunking and embeddings
 - Vector and keyword indexing
 - Hybrid search and fusion
 - API endpoints and error handling
+- Version tracking endpoints
+- Version badge component behavior
 
 ## Project Structure
 
@@ -95,16 +106,19 @@ pytest tests/ -v
 code/pdf-chat/
 ├── api/                    # FastAPI backend
 │   ├── app/
-│   │   ├── main.py        # API routes and session management
+│   │   ├── main.py        # API routes, session mgmt, version endpoints
 │   │   └── retrieval.py   # Hybrid search implementation
-│   ├── tests/             # Comprehensive test suite
-│   └── requirements.txt   # Python dependencies
+│   ├── tests/             # Comprehensive test suite (8+ test files)
+│   └── requirements.txt   # Python dependencies (optimized)
 ├── web/                   # Next.js frontend
 │   ├── src/
 │   │   ├── app/          # Next.js app router
-│   │   └── components/   # React components
+│   │   └── components/   # React components (inc. VersionBadge)
 │   └── package.json      # Node.js dependencies
-├── docker-compose.yml     # Multi-service orchestration
+├── VERSION                # Semantic version tracking
+├── docker-compose.yml     # Multi-service orchestration (optimized)
+├── Dockerfile.api         # Backend container (CPU-only PyTorch)
+├── Dockerfile.web         # Frontend container
 └── docs/
     └── specification.md  # Detailed technical specification
 ```
