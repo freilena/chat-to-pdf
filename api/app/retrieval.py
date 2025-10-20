@@ -1,4 +1,4 @@
-"""Retrieval functionality: chunking, embeddings, FAISS, Tantivy."""
+"""Retrieval functionality: chunking, embeddings, FAISS, simple keyword search."""
 from __future__ import annotations
 
 import json
