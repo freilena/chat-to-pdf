@@ -6,11 +6,11 @@ describe('VersionBadge', () => {
   beforeEach(() => {
     vi.resetAllMocks();
     // Set NODE_ENV to development for tests
-    process.env.NODE_ENV = 'development';
+    vi.stubEnv('NODE_ENV', 'development');
   });
 
   it('should not render in production mode', () => {
-    process.env.NODE_ENV = 'production';
+    vi.stubEnv('NODE_ENV', 'production');
     const { container } = render(<VersionBadge />);
     expect(container.firstChild).toBeNull();
   });
