@@ -32,7 +32,7 @@ describe('VersionBadge', () => {
         headers: { 'Content-Type': 'application/json' },
       })
     );
-    (globalThis as any).fetch = fetchMock;
+    (globalThis as unknown as { fetch: typeof fetch }).fetch = fetchMock;
 
     render(<VersionBadge />);
 
@@ -55,7 +55,7 @@ describe('VersionBadge', () => {
     const fetchMock = vi.fn().mockResolvedValueOnce(
       new Response(JSON.stringify(mockVersionData), { status: 200 })
     );
-    (globalThis as any).fetch = fetchMock;
+    (globalThis as unknown as { fetch: typeof fetch }).fetch = fetchMock;
 
     render(<VersionBadge />);
 
@@ -79,7 +79,7 @@ describe('VersionBadge', () => {
     const fetchMock = vi.fn().mockResolvedValueOnce(
       new Response(JSON.stringify(mockVersionData), { status: 200 })
     );
-    (globalThis as any).fetch = fetchMock;
+    (globalThis as unknown as { fetch: typeof fetch }).fetch = fetchMock;
 
     render(<VersionBadge />);
 
@@ -102,7 +102,7 @@ describe('VersionBadge', () => {
     const fetchMock = vi.fn().mockResolvedValueOnce(
       new Response(JSON.stringify(mockVersionData), { status: 200 })
     );
-    (globalThis as any).fetch = fetchMock;
+    (globalThis as unknown as { fetch: typeof fetch }).fetch = fetchMock;
 
     render(<VersionBadge />);
 
@@ -132,7 +132,7 @@ describe('VersionBadge', () => {
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     const fetchMock = vi.fn().mockRejectedValueOnce(new Error('Network error'));
-    (globalThis as any).fetch = fetchMock;
+    (globalThis as unknown as { fetch: typeof fetch }).fetch = fetchMock;
 
     const { container } = render(<VersionBadge />);
 
@@ -157,7 +157,7 @@ describe('VersionBadge', () => {
     const fetchMock = vi.fn().mockResolvedValueOnce(
       new Response('null', { status: 200 })
     );
-    (globalThis as any).fetch = fetchMock;
+    (globalThis as unknown as { fetch: typeof fetch }).fetch = fetchMock;
 
     const { container } = render(<VersionBadge />);
 
@@ -183,7 +183,7 @@ describe('VersionBadge', () => {
     const fetchMock = vi.fn().mockResolvedValueOnce(
       new Response(JSON.stringify(mockVersionData), { status: 200 })
     );
-    (globalThis as any).fetch = fetchMock;
+    (globalThis as unknown as { fetch: typeof fetch }).fetch = fetchMock;
 
     render(<VersionBadge />);
 
@@ -217,7 +217,7 @@ describe('VersionBadge', () => {
     const fetchMock = vi.fn().mockResolvedValueOnce(
       new Response(JSON.stringify(mockVersionData), { status: 200 })
     );
-    (globalThis as any).fetch = fetchMock;
+    (globalThis as unknown as { fetch: typeof fetch }).fetch = fetchMock;
 
     render(<VersionBadge />);
 

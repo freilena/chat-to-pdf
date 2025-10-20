@@ -2,7 +2,7 @@ import '@testing-library/jest-dom';
 import { setupServer } from 'msw/node';
 
 (() => {
-  if (typeof (globalThis as any).File === 'undefined') {
+  if (typeof (globalThis as unknown as { File: typeof File }).File === 'undefined') {
     class PolyFile extends Blob {
       name: string;
       lastModified: number;
@@ -12,7 +12,7 @@ import { setupServer } from 'msw/node';
         this.lastModified = options.lastModified ?? Date.now();
       }
     }
-    (globalThis as any).File = PolyFile as unknown as typeof File;
+    (globalThis as unknown as { File: typeof File }).File = PolyFile as unknown as typeof File;
   }
 })();
 
