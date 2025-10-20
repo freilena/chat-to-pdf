@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import asyncio
 import io
+import os
+import subprocess
 import uuid
+from pathlib import Path
 from typing import Dict
 
 from fastapi import FastAPI, File, UploadFile, Query, HTTPException
@@ -10,6 +13,89 @@ from fastapi.responses import JSONResponse
 from pypdf import PdfReader
 from pydantic import BaseModel
 from app.retrieval import HybridRetriever, chunk_text
+
+
+def get_version() -> str:
+    """Read version from VERSION file."""
+    version_file = Path(__file__).parent.parent.parent / "VERSION"
+    try:
+        return version_file.read_text().strip()
+    except Exception:
+        return "unknown"
+
+
+def get_git_info() -> dict[str, str | bool]:
+    """Get git information from the repository."""
+    repo_root = Path(__file__).parent.parent.parent
+    git_info: dict[str, str | bool] = {
+        "branch": "unknown",
+        "commit": "unknown",
+        "commit_full": "unknown",
+        "commit_date": "unknown",
+        "uncommitted_changes": False,
+    }
+    
+    try:
+        # Get current branch
+        result = subprocess.run(
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+            cwd=repo_root,
+            capture_output=True,
+            text=True,
+            timeout=1,
+        )
+        if result.returncode == 0:
+            git_info["branch"] = result.stdout.strip()
+        
+        # Get short commit hash
+        result = subprocess.run(
+            ["git", "rev-parse", "--short", "HEAD"],
+            cwd=repo_root,
+            capture_output=True,
+            text=True,
+            timeout=1,
+        )
+        if result.returncode == 0:
+            git_info["commit"] = result.stdout.strip()
+        
+        # Get full commit hash
+        result = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=repo_root,
+            capture_output=True,
+            text=True,
+            timeout=1,
+        )
+        if result.returncode == 0:
+            git_info["commit_full"] = result.stdout.strip()
+        
+        # Get commit date
+        result = subprocess.run(
+            ["git", "log", "-1", "--format=%cI"],
+            cwd=repo_root,
+            capture_output=True,
+            text=True,
+            timeout=1,
+        )
+        if result.returncode == 0:
+            git_info["commit_date"] = result.stdout.strip()
+        
+        # Check for uncommitted changes
+        result = subprocess.run(
+            ["git", "status", "--porcelain"],
+            cwd=repo_root,
+            capture_output=True,
+            text=True,
+            timeout=1,
+        )
+        if result.returncode == 0:
+            git_info["uncommitted_changes"] = bool(result.stdout.strip())
+    
+    except Exception:
+        pass  # Return unknown values if git commands fail
+    
+    return git_info
+
 
 app = FastAPI(title="Chat-To-PDF API")
 
@@ -26,7 +112,24 @@ MAX_PAGES_PER_PDF = 500
 
 @app.get("/healthz")
 def healthz():
-    return {"status": "ok"}
+    return {"status": "ok", "version": get_version()}
+
+
+@app.get("/version")
+def version():
+    """Get version and git information about the running application."""
+    git_info = get_git_info()
+    environment = os.getenv("ENVIRONMENT", "development")
+    
+    return {
+        "version": get_version(),
+        "git_branch": git_info["branch"],
+        "git_commit": git_info["commit"],
+        "git_commit_full": git_info["commit_full"],
+        "git_commit_date": git_info["commit_date"],
+        "git_uncommitted_changes": git_info["uncommitted_changes"],
+        "environment": environment,
+    }
 
 
 @app.post("/fastapi/upload")
