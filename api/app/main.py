@@ -17,7 +17,7 @@ from app.retrieval import HybridRetriever, chunk_text
 
 def get_version() -> str:
     """Read version from VERSION file."""
-    version_file = Path(__file__).parent.parent.parent / "VERSION"
+    version_file = Path(__file__).parent.parent / "VERSION"
     try:
         return version_file.read_text().strip()
     except Exception:
@@ -26,7 +26,7 @@ def get_version() -> str:
 
 def get_git_info() -> dict[str, str | bool]:
     """Get git information from the repository."""
-    repo_root = Path(__file__).parent.parent.parent
+    repo_root = Path(__file__).parent.parent
     git_info: dict[str, str | bool] = {
         "branch": "unknown",
         "commit": "unknown",
