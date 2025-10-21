@@ -15,7 +15,7 @@ def chunk_text(
     text: str,
     max_tokens: int = 500,
     overlap_pct: float = 0.15
-) -> list[dict[str, str]]:
+) -> list[dict[str, str | int]]:
     """
     Chunk text into paragraph-sized pieces with overlap.
     
@@ -37,7 +37,7 @@ def chunk_text(
     if len(tokens) <= max_tokens:
         return [{"text": text, "token_count": len(tokens)}]
     
-    chunks = []
+    chunks: list[dict[str, str | int]] = []
     overlap_tokens = int(max_tokens * overlap_pct)
     start = 0
     
@@ -194,7 +194,7 @@ class KeywordIndex:
             return []
         
         # Simple scoring: count how many query terms appear in each document
-        scored_docs = []
+        scored_docs: list[dict[str, float | dict[str, str]]] = []
         for doc in self.documents:
             text_lower = doc["text"].lower()
             score = 0
