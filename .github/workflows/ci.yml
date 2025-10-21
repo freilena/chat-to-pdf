@@ -51,7 +51,7 @@ jobs:
       
       - name: Run mypy type checking
         working-directory: ./api
-        run: mypy app
+        run: PYTHONPATH=. mypy app
 
   backend-tests:
     name: Backend Tests
@@ -81,7 +81,7 @@ jobs:
       
       - name: Run pytest
         working-directory: ./api
-        run: pytest tests/ -v
+        run: PYTHONPATH=. pytest tests/ -v
 
   frontend-lint:
     name: Frontend Linting
