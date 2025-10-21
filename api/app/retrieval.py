@@ -5,10 +5,15 @@ import numpy as np
 import faiss  # type: ignore[import-untyped]
 import tiktoken
 from sentence_transformers import SentenceTransformer
-from typing import Any
+from typing import Any, TypedDict
 
 # Global embedder instance (lazy-loaded)
 _embedder = None
+
+
+class ScoredDocument(TypedDict):
+    score: float
+    metadata: dict[str, str]
 
 
 def chunk_text(
@@ -194,7 +199,7 @@ class KeywordIndex:
             return []
         
         # Simple scoring: count how many query terms appear in each document
-        scored_docs: list[dict[str, float | dict[str, str]]] = []
+        scored_docs: list[ScoredDocument] = []
         for doc in self.documents:
             text_lower = doc["text"].lower()
             score = 0

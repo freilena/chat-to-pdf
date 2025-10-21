@@ -228,7 +228,7 @@ async def upload_files(files: list[UploadFile] = File(...)):
                 
                 # Add each chunk to the retriever
                 for chunk_idx, chunk in enumerate(chunks):
-                    chunk_content = chunk["text"]
+                    chunk_content: str = chunk["text"]  # type: ignore[assignment]
                     metadata = {
                         "doc_id": filename,
                         "chunk_id": chunk_idx,
