@@ -17,7 +17,7 @@ def chunk_text(
     text: str,
     max_tokens: int = 500,
     overlap_pct: float = 0.15
-) -> list[dict[str, str | int]]:
+) -> list[dict[str, object]]:
     """
     Chunk text into paragraph-sized pieces with overlap.
     
