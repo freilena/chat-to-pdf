@@ -8,6 +8,8 @@ import uuid
 from pathlib import Path
 from typing import Dict
 
+"""FastAPI application for PDF chat functionality."""
+
 from fastapi import FastAPI, File, UploadFile, Query, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -25,7 +27,7 @@ def get_version() -> str:
         Path("VERSION"),                                  # Current working directory
         Path("../VERSION"),                               # Parent of current working directory
     ]
-    
+
     for version_file in possible_paths:
         try:
             if version_file.exists():
@@ -34,7 +36,7 @@ def get_version() -> str:
                     return content
         except Exception:
             continue
-    
+
     return "unknown"
 
 
@@ -48,7 +50,7 @@ def get_git_info() -> dict[str, str | bool]:
         "commit_date": "unknown",
         "uncommitted_changes": False,
     }
-    
+
     try:
         # Get current branch
         result = subprocess.run(
@@ -57,10 +59,11 @@ def get_git_info() -> dict[str, str | bool]:
             capture_output=True,
             text=True,
             timeout=1,
+            check=False,
         )
         if result.returncode == 0:
             git_info["branch"] = result.stdout.strip()
-        
+
         # Get short commit hash
         result = subprocess.run(
             ["git", "rev-parse", "--short", "HEAD"],
@@ -68,10 +71,11 @@ def get_git_info() -> dict[str, str | bool]:
             capture_output=True,
             text=True,
             timeout=1,
+            check=False,
         )
         if result.returncode == 0:
             git_info["commit"] = result.stdout.strip()
-        
+
         # Get full commit hash
         result = subprocess.run(
             ["git", "rev-parse", "HEAD"],
@@ -79,10 +83,11 @@ def get_git_info() -> dict[str, str | bool]:
             capture_output=True,
             text=True,
             timeout=1,
+            check=False,
         )
         if result.returncode == 0:
             git_info["commit_full"] = result.stdout.strip()
-        
+
         # Get commit date
         result = subprocess.run(
             ["git", "log", "-1", "--format=%cI"],
@@ -90,10 +95,11 @@ def get_git_info() -> dict[str, str | bool]:
             capture_output=True,
             text=True,
             timeout=1,
+            check=False,
         )
         if result.returncode == 0:
             git_info["commit_date"] = result.stdout.strip()
-        
+
         # Check for uncommitted changes
         result = subprocess.run(
             ["git", "status", "--porcelain"],
@@ -101,13 +107,14 @@ def get_git_info() -> dict[str, str | bool]:
             capture_output=True,
             text=True,
             timeout=1,
+            check=False,
         )
         if result.returncode == 0:
             git_info["uncommitted_changes"] = bool(result.stdout.strip())
-    
+
     except Exception:
         pass  # Return unknown values if git commands fail
-    
+
     return git_info
 
 
@@ -143,7 +150,7 @@ def version():
     """Get version and git information about the running application."""
     git_info = get_git_info()
     environment = os.getenv("ENVIRONMENT", "development")
-    
+
     return {
         "version": get_version(),
         "git_branch": git_info["branch"],
@@ -222,10 +229,10 @@ async def upload_files(files: list[UploadFile] = File(...)):
                         full_text += page_text + "\n"
                     except Exception:
                         continue
-                
+
                 # Chunk the text
                 chunks = chunk_text(full_text)
-                
+
                 # Add each chunk to the retriever
                 for chunk_idx, chunk in enumerate(chunks):
                     chunk_content: str = chunk["text"]  # type: ignore[assignment]
@@ -236,14 +243,14 @@ async def upload_files(files: list[UploadFile] = File(...)):
                         "sentenceSpan": (0, len(chunk_content)),  # Simplified
                     }
                     retriever.add_document(chunk_content, metadata)
-                
+
                 # Update progress
                 state = SESSION_STATUS.get(sid)
                 if not state:
                     return
                 state["files_indexed"] = i + 1
                 await asyncio.sleep(0.1)  # Small delay to show progress
-            
+
             # Mark as done
             state = SESSION_STATUS.get(sid)
             if state:
@@ -301,29 +308,29 @@ async def query(req: QueryRequest) -> QueryResponse:
     session_state = SESSION_STATUS.get(req.session_id)
     if not session_state:
         raise HTTPException(status_code=404, detail="Session not found")
-    
+
     if session_state["status"] != "done":
         raise HTTPException(status_code=400, detail="Session still indexing")
-    
+
     # Get the retriever for this session
     retriever = SESSION_RETRIEVERS.get(req.session_id)
     if not retriever:
         raise HTTPException(status_code=404, detail="Session retriever not found")
-    
+
     # Search for relevant chunks
     search_results = retriever.search(req.question, k=5)
-    
+
     if not search_results:
         return QueryResponse(
             answer="Not found in your files.",
             citations=[]
         )
-    
+
     # For MVP, return a simple answer based on the top result
     # TODO: Integrate with Ollama for proper answer generation
     top_result = search_results[0]
     answer = f"Based on your files: {top_result['metadata']['text'][:200]}..."
-    
+
     # Convert search results to citations
     citations = []
     for i, result in enumerate(search_results[:3]):  # Max 3 citations
@@ -334,7 +341,7 @@ async def query(req: QueryRequest) -> QueryResponse:
             id=f"citation_{i+1}"
         )
         citations.append(citation)
-    
+
     return QueryResponse(
         answer=answer,
         citations=citations
