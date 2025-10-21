@@ -1,5 +1,4 @@
 """Tests for text chunking functionality."""
-import pytest
 from app.retrieval import chunk_text
 
 

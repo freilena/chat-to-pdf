@@ -1,8 +1,6 @@
 """Retrieval functionality: chunking, embeddings, FAISS, simple keyword search."""
 from __future__ import annotations
 
-import json
-import tempfile
 import numpy as np
 import faiss
 import tiktoken

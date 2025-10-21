@@ -1,5 +1,4 @@
 """Tests for embedding generation functionality."""
-import pytest
 from app.retrieval import get_embedder, embed_texts
 
 

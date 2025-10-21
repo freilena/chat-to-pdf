@@ -1,5 +1,4 @@
 """Tests for FAISS vector index functionality."""
-import pytest
 from app.retrieval import VectorIndex, embed_texts
 
 
