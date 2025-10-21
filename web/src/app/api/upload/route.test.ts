@@ -22,9 +22,11 @@ describe('api/upload route', () => {
     const res = await POST(req);
 
     expect(fetchMock).toHaveBeenCalled();
-    const [url, init] = fetchMock.mock.calls[0];
+    const mockCall = fetchMock.mock.calls[0];
+    expect(mockCall).toBeDefined();
+    const [url, init] = mockCall!;
     expect(url).toBe('http://localhost:8000/fastapi/upload');
-    expect(init.method).toBe('POST');
+    expect(init?.method).toBe('POST');
     const json = await res.json();
     expect(json.session_id).toBe('s1');
     expect(json.totals.files).toBe(1);
