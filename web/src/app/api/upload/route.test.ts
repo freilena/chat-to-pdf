@@ -11,7 +11,7 @@ describe('api/upload route', () => {
     const form = new FormData();
     form.append('files', new File([new Blob(['%PDF-1.4'])], 'a.pdf', { type: 'application/pdf' }));
 
-    const fetchMock = vi.spyOn(global, 'fetch').mockResolvedValue(
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
       new Response(
         JSON.stringify({ session_id: 's1', totals: { files: 1, bytes: 7 } }),
         { status: 200, headers: { 'content-type': 'application/json' } },

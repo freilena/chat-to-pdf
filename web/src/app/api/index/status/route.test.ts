@@ -8,7 +8,7 @@ describe('api/index/status route', () => {
   });
 
   it('proxies status requests', async () => {
-    const fetchMock = vi.spyOn(global, 'fetch').mockResolvedValue(
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
       new Response(
         JSON.stringify({ status: 'indexing', total_files: 1, files_indexed: 0 }),
         { status: 200, headers: { 'content-type': 'application/json' } },
