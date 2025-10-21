@@ -142,6 +142,7 @@ MAX_PAGES_PER_PDF = 500
 
 @app.get("/healthz")
 def healthz():
+    """Health check endpoint."""
     return {"status": "ok", "version": get_version()}
 
 
@@ -164,6 +165,7 @@ def version():
 
 @app.post("/fastapi/upload")
 async def upload_files(files: list[UploadFile] = File(...)):
+    """Upload and process PDF files for indexing."""
     if not files:
         raise HTTPException(status_code=400, detail="No files uploaded")
     if len(files) > MAX_FILES_PER_SESSION:
@@ -204,7 +206,10 @@ async def upload_files(files: list[UploadFile] = File(...)):
                 has_text = True
                 break
         if not has_text:
-            raise HTTPException(status_code=400, detail=f"{name} appears scanned/unsearchable (no text layer)")
+            raise HTTPException(
+                status_code=400, 
+                detail=f"{name} appears scanned/unsearchable (no text layer)"
+            )
 
     SESSION_STATUS[session_id] = {
         "status": "indexing",
@@ -223,7 +228,7 @@ async def upload_files(files: list[UploadFile] = File(...)):
                 # Extract text from PDF
                 reader = PdfReader(io.BytesIO(data))
                 full_text = ""
-                for page_num, page in enumerate(reader.pages):
+                for page in reader.pages:
                     try:
                         page_text = page.extract_text() or ""
                         full_text += page_text + "\n"
@@ -286,11 +291,13 @@ async def index_status(session_id: str = Query(...)):
 
 
 class QueryRequest(BaseModel):
+    """Request model for querying documents."""
     session_id: str
     question: str
 
 
 class Citation(BaseModel):
+    """Citation model for query responses."""
     file: str
     page: int
     sentenceSpan: tuple[int, int]
@@ -298,12 +305,14 @@ class Citation(BaseModel):
 
 
 class QueryResponse(BaseModel):
+    """Response model for query results."""
     answer: str
     citations: list[Citation]
 
 
 @app.post("/fastapi/query")
 async def query(req: QueryRequest) -> QueryResponse:
+    """Process a query against indexed documents."""
     # Check if session exists and is ready
     session_state = SESSION_STATUS.get(req.session_id)
     if not session_state:
