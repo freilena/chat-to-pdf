@@ -228,14 +228,14 @@ async def upload_files(files: list[UploadFile] = File(...)):
                 
                 # Add each chunk to the retriever
                 for chunk_idx, chunk in enumerate(chunks):
-                    chunk_text = chunk["text"]
+                    chunk_content = chunk["text"]
                     metadata = {
                         "doc_id": filename,
                         "chunk_id": chunk_idx,
                         "page": 1,  # Simplified for MVP
-                        "sentenceSpan": (0, len(chunk_text)),  # Simplified
+                        "sentenceSpan": (0, len(chunk_content)),  # Simplified
                     }
-                    retriever.add_document(chunk_text, metadata)
+                    retriever.add_document(chunk_content, metadata)
                 
                 # Update progress
                 state = SESSION_STATUS.get(sid)
