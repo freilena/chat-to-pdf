@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import numpy as np
-import faiss
+import faiss  # type: ignore[import-untyped]
 import tiktoken
 from sentence_transformers import SentenceTransformer
 from typing import Any
@@ -15,7 +15,7 @@ def chunk_text(
     text: str,
     max_tokens: int = 500,
     overlap_pct: float = 0.15
-) -> list[dict[str, object]]:
+) -> list[dict[str, str]]:
     """
     Chunk text into paragraph-sized pieces with overlap.
     
@@ -209,7 +209,7 @@ class KeywordIndex:
                 })
         
         # Sort by score (descending) and return top k
-        scored_docs.sort(key=lambda x: x["score"], reverse=True)
+        scored_docs.sort(key=lambda x: float(x["score"]), reverse=True)
         return scored_docs[:k]
 
 
