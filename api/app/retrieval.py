@@ -180,7 +180,7 @@ class KeywordIndex:
         full_metadata = {**metadata, "text": text}
         self.documents.append(full_metadata)
     
-    def search(self, query: str, k: int = 5) -> list[dict[str, Any]]:
+    def search(self, query: str, k: int = 5) -> list[ScoredDocument]:
         """
         Search for documents matching the query using simple keyword matching.
         
