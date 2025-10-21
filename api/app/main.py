@@ -18,11 +18,24 @@ from app.retrieval import HybridRetriever, chunk_text
 
 def get_version() -> str:
     """Read version from VERSION file."""
-    version_file = Path(__file__).parent.parent / "VERSION"
-    try:
-        return version_file.read_text().strip()
-    except Exception:
-        return "unknown"
+    # Try multiple possible locations for the VERSION file
+    possible_paths = [
+        Path(__file__).parent.parent.parent / "VERSION",  # From api/app/main.py to project root
+        Path(__file__).parent.parent / "VERSION",         # From api/app/main.py to api/
+        Path("VERSION"),                                  # Current working directory
+        Path("../VERSION"),                               # Parent of current working directory
+    ]
+    
+    for version_file in possible_paths:
+        try:
+            if version_file.exists():
+                content = version_file.read_text().strip()
+                if content:  # Only return if content is not empty
+                    return content
+        except Exception:
+            continue
+    
+    return "unknown"
 
 
 def get_git_info() -> dict[str, str | bool]:
