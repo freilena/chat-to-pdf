@@ -237,6 +237,7 @@ async def upload_files(files: list[UploadFile] = File(...)):
             "status": "indexing",
             "total_files": len(files),
             "files_indexed": 0,
+            "totals": {"files": len(files), "bytes": total_bytes},
         }
     )
 
