@@ -34,10 +34,39 @@ def get_version() -> str:
                 content = version_file.read_text().strip()
                 if content:  # Only return if content is not empty
                     return content
-        except Exception:
+        except (OSError, IOError, UnicodeDecodeError):
             continue
 
     return "unknown"
+
+
+def validate_pdf_file(name: str, data: bytes) -> None:
+    """Validate a PDF file for page count and searchable text."""
+    try:
+        reader = PdfReader(io.BytesIO(data))
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=f"{name} is not a valid PDF") from exc
+    
+    num_pages = len(reader.pages)
+    if num_pages > MAX_PAGES_PER_PDF:
+        raise HTTPException(status_code=400, detail=f"{name} exceeds {MAX_PAGES_PER_PDF} pages")
+    
+    # Check first few pages for any text
+    has_text = False
+    pages_to_check = min(num_pages, 3)
+    for i in range(pages_to_check):
+        try:
+            text = reader.pages[i].extract_text() or ""
+        except (AttributeError, IndexError, Exception):
+            text = ""
+        if text.strip():
+            has_text = True
+            break
+    if not has_text:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"{name} appears scanned/unsearchable (no text layer)"
+        )
 
 
 def get_git_info() -> dict[str, str | bool]:
@@ -112,7 +141,7 @@ def get_git_info() -> dict[str, str | bool]:
         if result.returncode == 0:
             git_info["uncommitted_changes"] = bool(result.stdout.strip())
 
-    except Exception:
+    except (OSError, subprocess.SubprocessError, FileNotFoundError):
         pass  # Return unknown values if git commands fail
 
     return git_info
@@ -187,29 +216,7 @@ async def upload_files(files: list[UploadFile] = File(...)):
 
     # Validate PDFs: page count and searchable text (reject scanned)
     for name, data in file_buffers:
-        try:
-            reader = PdfReader(io.BytesIO(data))
-        except Exception:
-            raise HTTPException(status_code=400, detail=f"{name} is not a valid PDF")
-        num_pages = len(reader.pages)
-        if num_pages > MAX_PAGES_PER_PDF:
-            raise HTTPException(status_code=400, detail=f"{name} exceeds {MAX_PAGES_PER_PDF} pages")
-        # Check first few pages for any text
-        has_text = False
-        pages_to_check = min(num_pages, 3)
-        for i in range(pages_to_check):
-            try:
-                text = reader.pages[i].extract_text() or ""
-            except Exception:
-                text = ""
-            if text.strip():
-                has_text = True
-                break
-        if not has_text:
-            raise HTTPException(
-                status_code=400, 
-                detail=f"{name} appears scanned/unsearchable (no text layer)"
-            )
+        validate_pdf_file(name, data)
 
     SESSION_STATUS[session_id] = {
         "status": "indexing",
@@ -222,57 +229,69 @@ async def upload_files(files: list[UploadFile] = File(...)):
     SESSION_RETRIEVERS[session_id] = retriever
 
     # Background indexing: process PDFs and add to retriever
-    async def do_indexing(sid: str, file_buffers: list[tuple[str, bytes]]) -> None:
-        try:
-            for i, (filename, data) in enumerate(file_buffers):
-                # Extract text from PDF
-                reader = PdfReader(io.BytesIO(data))
-                full_text = ""
-                for page in reader.pages:
-                    try:
-                        page_text = page.extract_text() or ""
-                        full_text += page_text + "\n"
-                    except Exception:
-                        continue
-
-                # Chunk the text
-                chunks = chunk_text(full_text)
-
-                # Add each chunk to the retriever
-                for chunk_idx, chunk in enumerate(chunks):
-                    chunk_content: str = chunk["text"]  # type: ignore[assignment]
-                    metadata = {
-                        "doc_id": filename,
-                        "chunk_id": chunk_idx,
-                        "page": 1,  # Simplified for MVP
-                        "sentenceSpan": (0, len(chunk_content)),  # Simplified
-                    }
-                    retriever.add_document(chunk_content, metadata)
-
-                # Update progress
-                state = SESSION_STATUS.get(sid)
-                if not state:
-                    return
-                state["files_indexed"] = i + 1
-                await asyncio.sleep(0.1)  # Small delay to show progress
-
-            # Mark as done
-            state = SESSION_STATUS.get(sid)
-            if state:
-                state["status"] = "done"
-        except Exception:
-            state = SESSION_STATUS.get(sid)
-            if state:
-                state["status"] = "error"
-
-    asyncio.create_task(do_indexing(session_id, file_buffers))
+    asyncio.create_task(process_pdfs_background(session_id, file_buffers))
 
     return JSONResponse(
         {
             "session_id": session_id,
-            "totals": {"files": len(files), "bytes": total_bytes},
+            "status": "indexing",
+            "total_files": len(files),
+            "files_indexed": 0,
         }
     )
+
+
+async def process_pdfs_background(session_id: str, file_buffers: list[tuple[str, bytes]]) -> None:
+    """Background task to process PDFs and add to retriever."""
+    try:
+        retriever = SESSION_RETRIEVERS.get(session_id)
+        if not retriever:
+            return
+            
+        for i, (filename, data) in enumerate(file_buffers):
+            # Extract text from PDF
+            reader = PdfReader(io.BytesIO(data))
+            full_text = ""
+            for page in reader.pages:
+                try:
+                    page_text = page.extract_text() or ""
+                    full_text += page_text + "\n"
+                except (AttributeError, Exception):
+                    continue
+
+            # Chunk the text
+            chunks = chunk_text(full_text)
+
+            # Add each chunk to the retriever
+            for chunk_idx, chunk in enumerate(chunks):
+                chunk_content: str = chunk["text"]  # type: ignore[assignment]
+                metadata = {
+                    "doc_id": filename,
+                    "chunk_id": chunk_idx,
+                    "page": 1,  # Simplified for MVP
+                    "sentenceSpan": (0, len(chunk_content)),  # Simplified
+                    "text": chunk_content,
+                }
+                retriever.add_document(chunk_content, metadata)
+
+            # Update progress
+            state = SESSION_STATUS.get(session_id)
+            if not state:
+                return
+            state["files_indexed"] = i + 1
+            await asyncio.sleep(0.1)  # Small delay to show progress
+
+        # Mark as done
+        state = SESSION_STATUS.get(session_id)
+        if state:
+            state["status"] = "done"
+    except Exception as exc:
+        state = SESSION_STATUS.get(session_id)
+        if state:
+            state["status"] = "error"
+            state["error"] = str(exc)
+
+
 
 
 @app.get("/fastapi/index/status")
