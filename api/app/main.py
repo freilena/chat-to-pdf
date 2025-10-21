@@ -1,3 +1,5 @@
+"""FastAPI application for PDF chat functionality."""
+
 from __future__ import annotations
 
 import asyncio
@@ -7,8 +9,6 @@ import subprocess
 import uuid
 from pathlib import Path
 from typing import Dict
-
-"""FastAPI application for PDF chat functionality."""
 
 from fastapi import FastAPI, File, UploadFile, Query, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
