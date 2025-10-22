@@ -33,4 +33,4 @@ jobs:
       - name: Run pylint on API code
         working-directory: ./api
         run: |
-          pylint app/ --output-format=text --reports=y
+          pylint app/ --output-format=text --reports=y --fail-under=9.0 --errors-only
