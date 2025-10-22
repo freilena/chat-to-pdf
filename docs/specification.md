@@ -27,9 +27,9 @@
   - Validate limits and text-layer presence client-side where possible; revalidate server-side
 - **Indexing**
   - Chunking: paragraph-sized (~400–600 tokens) with 15% overlap
-  - Embeddings: local open-source `bge-small-en` (English-only)
-  - Vector store: FAISS (exact or HNSW, CPU)
-  - Keyword index: Tantivy (BM25)
+  - Embeddings: local open-source `all-MiniLM-L6-v2` (English-only, 80MB, optimized)
+  - Vector store: FAISS (exact or HNSW, CPU-only)
+  - Keyword index: Simple keyword matching (MVP - Tantivy planned for future)
   - Store mapping for paragraph → sentences (character spans) for highlight
 - **Retrieval**
   - Hybrid: run FAISS and BM25 in parallel
@@ -79,9 +79,9 @@
   - Next.js API routes for auth/session and proxy to Python where needed **COMPLETED**
   - Python FastAPI service: **COMPLETED**
     - PDF ingestion (extract text layer, page map, paragraph/sentence segmentation) **COMPLETED**
-    - Embedding generation with `bge-small-en` (CPU) **COMPLETED**
-    - FAISS vector index (per session, temp dir) **COMPLETED**
-    - Tantivy BM25 index (per session, temp dir) *Pending* (Currently implemented using Python-based keyword search. TODO with Tantivy if user requires)
+    - Embedding generation with `all-MiniLM-L6-v2` (CPU, optimized) **COMPLETED**
+    - FAISS vector index (per session, temp dir, CPU-only) **COMPLETED**
+    - Simple keyword search (per session, temp dir) **COMPLETED** (Tantivy BM25 planned for future)
     - Hybrid retrieval + RRF fusion **COMPLETED**
     - Model inference via Ollama (Llama 3.1 8B), with prompt templates for strict grounding and 150-word cap - *Pending*
     - Session lifecycle and deletion *Pending* (basic implementation completed. TODO review if refactoring is required)

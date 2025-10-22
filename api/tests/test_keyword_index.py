@@ -1,5 +1,4 @@
-"""Tests for Tantivy keyword search functionality."""
-import pytest
+"""Tests for simple keyword search functionality (MVP implementation)."""
 from app.retrieval import KeywordIndex
 
 

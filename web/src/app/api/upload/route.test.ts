@@ -11,7 +11,7 @@ describe('api/upload route', () => {
     const form = new FormData();
     form.append('files', new File([new Blob(['%PDF-1.4'])], 'a.pdf', { type: 'application/pdf' }));
 
-    const fetchMock = vi.spyOn(global, 'fetch').mockResolvedValue(
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
       new Response(
         JSON.stringify({ session_id: 's1', totals: { files: 1, bytes: 7 } }),
         { status: 200, headers: { 'content-type': 'application/json' } },
@@ -22,7 +22,9 @@ describe('api/upload route', () => {
     const res = await POST(req);
 
     expect(fetchMock).toHaveBeenCalled();
-    const [url, init] = fetchMock.mock.calls[0];
+    const mockCall = fetchMock.mock.calls[0];
+    expect(mockCall).toBeDefined();
+    const [url, init] = mockCall!;
     expect(url).toBe('http://localhost:8000/fastapi/upload');
     expect(init?.method).toBe('POST');
     const json = await res.json();

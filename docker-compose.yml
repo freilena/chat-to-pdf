@@ -9,8 +9,13 @@ services:
       - NEXT_TELEMETRY_DISABLED=1
       - API_BASE_URL=http://api:8000
     volumes:
-      - ./web:/app
+      - ./web/src:/app/src:delegated
+      - ./web/public:/app/public:delegated
+      - ./web/next.config.ts:/app/next.config.ts:delegated
+      - ./web/package.json:/app/package.json:delegated
+      - ./web/tsconfig.json:/app/tsconfig.json:delegated
       - /app/node_modules
+      - /app/.next
     depends_on:
       - api
   api:
@@ -21,6 +26,8 @@ services:
       - "8000:8000"
     volumes:
       - ./api:/app
+      - ./VERSION:/app/VERSION:ro
+      - ./.git:/app/.git:ro
     environment:
       - PYTHONPATH=/app
     command: ["uvicorn", "app.main:app", "--reload", "--host", "0.0.0.0", "--port", "8000"]
