@@ -164,7 +164,7 @@ describe('MessageList', () => {
       ...mockMessages,
       {
         id: 'unknown',
-        type: 'unknown' as any,
+        type: 'unknown' as 'user' | 'assistant' | 'system',
         content: 'Unknown message type',
         timestamp: new Date(),
       }
