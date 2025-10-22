@@ -4,6 +4,7 @@ export async function POST(req: Request) {
     method: 'POST',
     body: req.body,
     headers: req.headers,
+    duplex: 'half',
   });
   return new Response(await res.text(), { status: res.status, headers: res.headers });
 }
