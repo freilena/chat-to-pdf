@@ -12,9 +12,10 @@ A browser-based web application that enables users to chat with their PDF docume
 - **RESTful API**: FastAPI backend with CORS support and comprehensive error handling
 - **Version Tracking**: Git-integrated version system with API endpoints and UI badge
 - **Optimized Build**: CPU-only PyTorch and lightweight embeddings (build time: ~15-20 min vs ~1 hour)
+- **Chat Interface**: Complete responsive chat UI with message components and auto-scroll
 
 ### Planned
-- **Chat Interface**: Interactive Q&A with inline citations
+- **Chat Backend Integration**: Message submission and AI response generation
 - **PDF Viewer**: Modal viewer with sentence-level highlighting
 - **AI Answer Generation**: Llama 3.1 8B integration via Ollama
 
@@ -91,7 +92,7 @@ docker compose exec api pytest -v
 docker compose exec web npm run test
 ```
 
-**Test Coverage**: 42+ tests covering:
+**Test Coverage**: 81+ tests covering:
 - PDF upload and validation
 - Text chunking and embeddings
 - Vector and keyword indexing
@@ -99,6 +100,8 @@ docker compose exec web npm run test
 - API endpoints and error handling
 - Version tracking endpoints
 - Version badge component behavior
+- Chat interface and message components
+- Responsive design and accessibility
 
 ## Continuous Integration
 
@@ -116,7 +119,7 @@ The project uses GitHub Actions for automated CI/CD with comprehensive quality c
 3. **Backend Tests** - Pytest test suite (32 tests)
 4. **Frontend Linting** - ESLint code quality checks
 5. **Frontend Type Checking** - TypeScript compilation validation
-6. **Frontend Tests** - Vitest test suite (3 tests)
+6. **Frontend Tests** - Vitest test suite (81 tests)
 
 ### Additional Workflows
 - **Pylint Analysis** - Python code analysis with detailed reports
@@ -145,16 +148,21 @@ code/pdf-chat/
 │   └── requirements.txt   # Python dependencies (optimized)
 ├── web/                   # Next.js frontend
 │   ├── src/
-│   │   ├── app/          # Next.js app router
-│   │   └── components/   # React components (inc. VersionBadge)
+│   │   ├── app/          # Next.js app router (inc. chat page)
+│   │   ├── components/   # React components (VersionBadge, chat components)
+│   │   └── hooks/        # Custom React hooks (useSession)
 │   └── package.json      # Node.js dependencies
 ├── VERSION                # Semantic version tracking
 ├── docker-compose.yml     # Multi-service orchestration (optimized)
 ├── Dockerfile.api         # Backend container (CPU-only PyTorch)
 ├── Dockerfile.web         # Frontend container
 └── docs/
-    ├── specification.md   # Detailed technical specification
-    └── ci-documentation.md # CI/CD documentation
+    ├── specification.md     # Detailed technical specification
+    ├── ci-documentation.md  # CI/CD documentation
+    ├── chat-page-layout.md  # Chat UI implementation docs
+    ├── component-api.md     # Component API reference
+    ├── developer-guide.md   # Developer guide for chat components
+    └── api-reference.md     # API reference for chat endpoints
 ```
 
 ## Configuration
