@@ -74,7 +74,7 @@ def get_embedder() -> SentenceTransformer:
     Returns:
         SentenceTransformer model instance
     """
-    global _embedder
+    global _embedder  # pylint: disable=global-statement
     if _embedder is None:
         # Use all-MiniLM-L6-v2 (lightweight, 80MB model with 384-dim embeddings)
         _embedder = SentenceTransformer("all-MiniLM-L6-v2")
@@ -336,4 +336,3 @@ class HybridRetriever:
         combined.sort(key=lambda x: x["score"], reverse=True)
 
         return combined[:k]
-

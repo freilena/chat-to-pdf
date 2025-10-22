@@ -46,11 +46,11 @@ def validate_pdf_file(name: str, data: bytes) -> None:
         reader = PdfReader(io.BytesIO(data))
     except Exception as exc:
         raise HTTPException(status_code=400, detail=f"{name} is not a valid PDF") from exc
-    
+
     num_pages = len(reader.pages)
     if num_pages > MAX_PAGES_PER_PDF:
         raise HTTPException(status_code=400, detail=f"{name} exceeds {MAX_PAGES_PER_PDF} pages")
-    
+
     # Check first few pages for any text
     has_text = False
     pages_to_check = min(num_pages, 3)
@@ -64,7 +64,7 @@ def validate_pdf_file(name: str, data: bytes) -> None:
             break
     if not has_text:
         raise HTTPException(
-            status_code=400, 
+            status_code=400,
             detail=f"{name} appears scanned/unsearchable (no text layer)"
         )
 
@@ -242,38 +242,43 @@ async def upload_files(files: list[UploadFile] = File(...)):
     )
 
 
+def process_single_pdf(filename: str, data: bytes, retriever: HybridRetriever) -> None:
+    """Process a single PDF file and add chunks to retriever."""
+    # Extract text from PDF
+    reader = PdfReader(io.BytesIO(data))
+    full_text = ""
+    for page in reader.pages:
+        try:
+            page_text = page.extract_text() or ""
+            full_text += page_text + "\n"
+        except (AttributeError, IndexError, Exception):
+            continue
+
+    # Chunk the text
+    chunks = chunk_text(full_text)
+
+    # Add each chunk to the retriever
+    for chunk_idx, chunk in enumerate(chunks):
+        chunk_content: str = chunk["text"]  # type: ignore[assignment]
+        metadata = {
+            "doc_id": filename,
+            "chunk_id": chunk_idx,
+            "page": 1,  # Simplified for MVP
+            "sentenceSpan": (0, len(chunk_content)),  # Simplified
+            "text": chunk_content,
+        }
+        retriever.add_document(chunk_content, metadata)
+
+
 async def process_pdfs_background(session_id: str, file_buffers: list[tuple[str, bytes]]) -> None:
     """Background task to process PDFs and add to retriever."""
     try:
         retriever = SESSION_RETRIEVERS.get(session_id)
         if not retriever:
             return
-            
+
         for i, (filename, data) in enumerate(file_buffers):
-            # Extract text from PDF
-            reader = PdfReader(io.BytesIO(data))
-            full_text = ""
-            for page in reader.pages:
-                try:
-                    page_text = page.extract_text() or ""
-                    full_text += page_text + "\n"
-                except (AttributeError, Exception):
-                    continue
-
-            # Chunk the text
-            chunks = chunk_text(full_text)
-
-            # Add each chunk to the retriever
-            for chunk_idx, chunk in enumerate(chunks):
-                chunk_content: str = chunk["text"]  # type: ignore[assignment]
-                metadata = {
-                    "doc_id": filename,
-                    "chunk_id": chunk_idx,
-                    "page": 1,  # Simplified for MVP
-                    "sentenceSpan": (0, len(chunk_content)),  # Simplified
-                    "text": chunk_content,
-                }
-                retriever.add_document(chunk_content, metadata)
+            process_single_pdf(filename, data, retriever)
 
             # Update progress
             state = SESSION_STATUS.get(session_id)
@@ -286,7 +291,7 @@ async def process_pdfs_background(session_id: str, file_buffers: list[tuple[str,
         state = SESSION_STATUS.get(session_id)
         if state:
             state["status"] = "done"
-    except Exception as exc:
+    except Exception as exc:  # pylint: disable=broad-exception-caught
         state = SESSION_STATUS.get(session_id)
         if state:
             state["status"] = "error"
@@ -297,6 +302,7 @@ async def process_pdfs_background(session_id: str, file_buffers: list[tuple[str,
 
 @app.get("/fastapi/index/status")
 async def index_status(session_id: str = Query(...)):
+    """Get the indexing status for a session."""
     state = SESSION_STATUS.get(session_id)
     if state is None:
         raise HTTPException(status_code=404, detail="Unknown session_id")
