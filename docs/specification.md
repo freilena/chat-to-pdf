@@ -1,11 +1,12 @@
 ### MVP Specification — "Chat with your PDFs"
 
-**🎯 IMPLEMENTATION STATUS: CORE COMPLETE (80%)**
+**🎯 IMPLEMENTATION STATUS: CORE COMPLETE (85%)**
 - ✅ **Backend Infrastructure**: Complete (retrieval, indexing, query processing)
 - ✅ **API Endpoints**: Complete (upload, status, query)
 - ✅ **Frontend Upload UI**: Complete (drag-drop, progress, validation)
-- ✅ **Testing**: Complete (32 passing tests)
-- ⏳ **Pending**: OAuth auth, chat UI, PDF viewer, Ollama integration
+- ✅ **Frontend Chat UI**: Complete (message components, responsive layout)
+- ✅ **Testing**: Complete (81 passing tests)
+- ⏳ **Pending**: OAuth auth, PDF viewer, Ollama integration
 
 - **Platform**: Browser-based web app
 - **Auth**: Required; OAuth via Google and Apple - *Pending*
@@ -73,6 +74,7 @@
 - **Frontend**: Next.js (React) **COMPLETED**
   - Auth UI (Google/Apple) - *Pending*
   - Upload UI with progress + validations **COMPLETED**
+  - Chat UI with message components and responsive layout **COMPLETED**
   - Chat UI with inline markers and "Show citations" control - *Pending*
   - Modal PDF viewer (pdf.js), sentence-level text-layer highlighting - *Pending*
 - **Backend** *Pending*
