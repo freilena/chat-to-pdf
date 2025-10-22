@@ -1,6 +1,5 @@
 """Tests for hybrid fusion of semantic and keyword search results."""
-import pytest
-from app.retrieval import HybridRetriever, VectorIndex, KeywordIndex, embed_texts
+from app.retrieval import HybridRetriever, VectorIndex, KeywordIndex
 
 
 def test_hybrid_retriever_creation():

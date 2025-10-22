@@ -100,11 +100,44 @@ docker compose exec web npm run test
 - Version tracking endpoints
 - Version badge component behavior
 
+## Continuous Integration
+
+The project uses GitHub Actions for automated CI/CD with comprehensive quality checks:
+
+### CI Pipeline Features
+- **Automated Testing**: Runs on every commit and pull request
+- **Parallel Execution**: All 6 jobs run simultaneously (~3-4 minutes total)
+- **Dependency Caching**: Pip and npm dependencies cached for speed
+- **Model Caching**: Embedding model cached to avoid re-downloads
+
+### CI Jobs
+1. **Backend Linting** - Ruff code style and quality checks
+2. **Backend Type Checking** - MyPy static type analysis
+3. **Backend Tests** - Pytest test suite (32 tests)
+4. **Frontend Linting** - ESLint code quality checks
+5. **Frontend Type Checking** - TypeScript compilation validation
+6. **Frontend Tests** - Vitest test suite (3 tests)
+
+### Additional Workflows
+- **Pylint Analysis** - Python code analysis with detailed reports
+- **Trigger Events**: Push to any branch, pull requests, and main branch merges
+
+### CI Status
+- **Required for Merge**: No (informational only - can merge even if checks fail)
+- **Notifications**: GitHub UI only
+- **Runtime**: 3-4 minutes (first run ~5 minutes for cache warming)
+
+For detailed CI documentation, see [docs/ci-documentation.md](docs/ci-documentation.md).
+
 ## Project Structure
 
 ```
 code/pdf-chat/
-├── api/                    # FastAPI backend
+├── .github/               # GitHub Actions CI/CD
+│   └── workflows/
+│       ├── ci.yml         # Main CI pipeline (6 parallel jobs)
+│       └── pylint.yml     # Python code analysis
+├── api/                   # FastAPI backend
 │   ├── app/
 │   │   ├── main.py        # API routes, session mgmt, version endpoints
 │   │   └── retrieval.py   # Hybrid search implementation
@@ -120,7 +153,8 @@ code/pdf-chat/
 ├── Dockerfile.api         # Backend container (CPU-only PyTorch)
 ├── Dockerfile.web         # Frontend container
 └── docs/
-    └── specification.md  # Detailed technical specification
+    ├── specification.md   # Detailed technical specification
+    └── ci-documentation.md # CI/CD documentation
 ```
 
 ## Configuration

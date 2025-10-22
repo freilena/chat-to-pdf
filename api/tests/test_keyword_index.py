@@ -1,5 +1,4 @@
 """Tests for simple keyword search functionality (MVP implementation)."""
-import pytest
 from app.retrieval import KeywordIndex
 
 

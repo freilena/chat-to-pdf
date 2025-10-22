@@ -95,7 +95,7 @@ def test_index_status_initial_indexing():
     files = [("files", ("a.pdf", io.BytesIO(pdf_content), "application/pdf"))]
     up = client.post("/fastapi/upload", files=files)
     session_id = up.json()["session_id"]
-    st = client.get(f"/fastapi/index/status", params={"session_id": session_id})
+    st = client.get("/fastapi/index/status", params={"session_id": session_id})
     assert st.status_code == 200, st.text
     sdata = st.json()
     assert sdata["status"] in {"queued", "indexing", "done"}

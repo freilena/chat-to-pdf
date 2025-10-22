@@ -1,4 +1,3 @@
-import io
 from fastapi.testclient import TestClient
 from app.main import app, SESSION_STATUS, SESSION_RETRIEVERS
 
