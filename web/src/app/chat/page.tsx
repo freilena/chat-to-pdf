@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useRef, useEffect } from 'react';
+import Link from 'next/link';
 import { MessageList } from '@/components/chat/MessageList';
 import { ChatInput } from '@/components/chat/ChatInput';
 import { IndexingStatus } from '@/components/chat/IndexingStatus';
@@ -11,7 +12,7 @@ import { useIndexingStatus } from '@/hooks/useIndexingStatus';
 export default function ChatPage() {
   const { sessionId, isAuthenticated } = useSession();
   const { messages, inputValue, setInputValue, isLoading, handleSubmit } = useChat();
-  const { status: indexingStatus, isIndexing, isComplete, hasError, progress } = useIndexingStatus(sessionId);
+  const { status: indexingStatus, isIndexing, hasError, progress } = useIndexingStatus(sessionId);
   const messageContainerRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -30,7 +31,7 @@ export default function ChatPage() {
         <div className="empty-state">
           <h2>No PDFs uploaded yet</h2>
           <p>Please upload your PDF files first to start chatting.</p>
-          <a href="/" className="btn btn-primary">Go to Upload</a>
+          <Link href="/" className="btn btn-primary">Go to Upload</Link>
         </div>
       </div>
     );

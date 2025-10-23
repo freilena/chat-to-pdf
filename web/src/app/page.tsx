@@ -7,7 +7,7 @@ import Link from "next/link";
 
 export default function Home() {
   const { isAuthenticated, sessionId } = useSession();
-  const { status: indexingStatus, isIndexing, isComplete, hasError } = useIndexingStatus(sessionId);
+  const { status: indexingStatus } = useIndexingStatus(sessionId);
 
   return (
     <div className="grid grid-2">
