@@ -19,6 +19,12 @@ body {
   padding: 0;
 }
 
+#__next {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
 body {
   background: #fafafa;
   color: #111;
@@ -132,6 +138,7 @@ a {
   height: 100vh;
   max-width: 100vw;
   background: var(--background);
+  min-height: 0;
 }
 
 .chat-header {
@@ -183,6 +190,7 @@ a {
   padding: 16px;
   display: flex;
   flex-direction: column;
+  min-height: 0;
 }
 
 .message-list {
@@ -325,6 +333,8 @@ a {
   border-top: 1px solid var(--border);
   padding: 16px;
   flex-shrink: 0;
+  position: sticky;
+  bottom: 0;
 }
 
 .input-container {
