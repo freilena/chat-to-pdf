@@ -3,8 +3,8 @@ import { Message } from '@/components/chat/MessageList';
 import { submitQuery, QueryResponse } from '@/lib/api/query';
 import { useSession } from './useSession';
 
-// Helper function to truncate text to 150 words
-function truncateToWords(text: string, maxWords: number = 150): string {
+// Helper function to truncate text to 500 words (more reasonable limit)
+function truncateToWords(text: string, maxWords: number = 500): string {
   const words = text.split(' ');
   if (words.length <= maxWords) {
     return text;

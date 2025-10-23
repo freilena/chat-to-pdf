@@ -301,8 +301,8 @@ describe('useChat', () => {
     });
   });
 
-  it('truncates long responses to 150 words', async () => {
-    const longAnswer = 'word '.repeat(200); // 200 words
+  it('truncates long responses to 500 words', async () => {
+    const longAnswer = 'word '.repeat(600); // 600 words
     const mockResponse = { answer: longAnswer };
     mockSubmitQuery.mockResolvedValue(mockResponse);
 
@@ -318,7 +318,7 @@ describe('useChat', () => {
 
     const responseMessage = result.current.messages[1];
     const wordCount = responseMessage.content.split(' ').length;
-    expect(wordCount).toBeLessThanOrEqual(150);
+    expect(wordCount).toBeLessThanOrEqual(500);
     expect(responseMessage.content).toContain('...');
   });
 

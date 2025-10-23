@@ -361,10 +361,30 @@ async def query(req: QueryRequest) -> QueryResponse:
             citations=[]
         )
 
-    # For MVP, return a simple answer based on the top result
+    # For MVP, return a more comprehensive answer based on search results
     # TODO: Integrate with Ollama for proper answer generation
-    top_result = search_results[0]
-    answer = f"Based on your files: {top_result['metadata']['text'][:200]}..."
+    if len(search_results) == 1:
+        # Single result - return more context
+        top_result = search_results[0]
+        text = top_result['metadata']['text']
+        # Return up to 1000 characters instead of 200
+        if len(text) > 1000:
+            answer = f"Based on your files: {text[:1000]}..."
+        else:
+            answer = f"Based on your files: {text}"
+    else:
+        # Multiple results - combine them for better context
+        combined_text = ""
+        for i, result in enumerate(search_results[:3]):  # Use top 3 results
+            text = result['metadata']['text']
+            if len(text) > 300:  # Limit each result to 300 chars
+                text = text[:300] + "..."
+            combined_text += f"Result {i+1}: {text}\n\n"
+        
+        if len(combined_text) > 1500:
+            combined_text = combined_text[:1500] + "..."
+        
+        answer = f"Based on your files:\n\n{combined_text}"
 
     # Convert search results to citations
     citations = []

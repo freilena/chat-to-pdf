@@ -195,7 +195,7 @@ describe('AssistantMessage', () => {
   });
 
   it('renders truncated message with ellipsis indicator', () => {
-    const longMessage = 'word '.repeat(200) + 'end...';
+    const longMessage = 'word '.repeat(600) + 'end...';
     render(<AssistantMessage message={longMessage} timestamp={new Date()} />);
     
     const messageElement = screen.getByTestId('assistant-message');

@@ -243,7 +243,7 @@ a {
 }
 
 .assistant-message.truncated-message::after {
-  content: "Response truncated to 150 words";
+  content: "Response truncated to 500 words";
   position: absolute;
   bottom: -20px;
   right: 0;

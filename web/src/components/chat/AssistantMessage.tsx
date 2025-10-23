@@ -19,7 +19,7 @@ export function AssistantMessage({ message, timestamp, isLoading = false }: Assi
   const isNotFoundMessage = message === 'Not found in your files.';
   
   // Determine if this is a truncated message (ends with "...")
-  const isTruncatedMessage = message.endsWith('...') && message.split(' ').length > 100;
+  const isTruncatedMessage = message.endsWith('...') && message.split(' ').length > 400;
 
   // Build CSS classes
   const baseClasses = 'assistant-message message';
