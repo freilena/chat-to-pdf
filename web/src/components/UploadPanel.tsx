@@ -1,13 +1,16 @@
 'use client';
 import React from 'react';
+import { useRouter } from 'next/navigation';
 
 export function UploadPanel() {
+  const router = useRouter();
   const [files, setFiles] = React.useState<FileList | null>(null);
   const [isIndexing, setIsIndexing] = React.useState(false);
   const [sessionId, setSessionId] = React.useState<string | null>(null);
   const [filesIndexed, setFilesIndexed] = React.useState<number>(0);
   const [totalFiles, setTotalFiles] = React.useState<number>(0);
   const [error, setError] = React.useState<string | null>(null);
+  const [isIndexingComplete, setIsIndexingComplete] = React.useState(false);
 
   async function onUpload() {
     if (!files || files.length === 0) return;
@@ -33,11 +36,22 @@ export function UploadPanel() {
       const st = await stRes.json();
       if (typeof st.files_indexed === 'number') setFilesIndexed(st.files_indexed);
       if (typeof st.total_files === 'number') setTotalFiles(st.total_files);
-      if (st.status === 'done') break;
+      if (st.status === 'done') {
+        setIsIndexingComplete(true);
+        break;
+      }
       await new Promise((r) => setTimeout(r, 10));
     }
     setIsIndexing(false);
   }
+
+  const handleAskClick = () => {
+    if (sessionId) {
+      // Store session ID in localStorage for the chat page to use
+      localStorage.setItem('pdf-chat-session-id', sessionId);
+      router.push('/chat');
+    }
+  };
 
   return (
     <div className="card">
@@ -91,7 +105,14 @@ export function UploadPanel() {
           <div style={{ fontSize: 12, color: '#666', marginTop: 4 }}>{`Indexing ${filesIndexed}/${totalFiles}`}</div>
         </div>
       )}
-      <button disabled={isIndexing} aria-label="chat-btn">Ask</button>
+      <button 
+        onClick={handleAskClick}
+        disabled={!isIndexingComplete || !sessionId} 
+        className={isIndexingComplete && sessionId ? 'btn btn-primary' : 'btn'}
+        aria-label="chat-btn"
+      >
+        {isIndexingComplete ? 'Ask Questions' : 'Ask'}
+      </button>
       {sessionId && <div aria-label="session-id">{sessionId}</div>}
     </div>
   );

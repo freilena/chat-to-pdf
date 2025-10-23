@@ -17,7 +17,7 @@ export function useChat() {
     const trimmedInput = inputValue.trim();
     
     // Don't submit empty or whitespace-only messages
-    if (!trimmedInput || isLoading) {
+    if (!trimmedInput || isLoading || !sessionId) {
       return;
     }
 
