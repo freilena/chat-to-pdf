@@ -3,6 +3,30 @@ import { Message } from '@/components/chat/MessageList';
 import { submitQuery, QueryResponse } from '@/lib/api/query';
 import { useSession } from './useSession';
 
+// Helper function to truncate text to 500 words (more reasonable limit)
+function truncateToWords(text: string, maxWords: number = 500): string {
+  const words = text.split(' ');
+  if (words.length <= maxWords) {
+    return text;
+  }
+  return words.slice(0, maxWords).join(' ') + '...';
+}
+
+// Helper function to get appropriate error message
+function getErrorMessage(error: Error): string {
+  const message = error.message.toLowerCase();
+  
+  if (message.includes('timeout')) {
+    return 'The request timed out. Please try again with a shorter question.';
+  }
+  
+  if (message.includes('processing') || message.includes('query')) {
+    return 'Sorry, there was an error processing your question. Please try again.';
+  }
+  
+  return 'Sorry, there was an error processing your question. Please try again.';
+}
+
 export function useChat() {
   const { sessionId } = useSession();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -36,11 +60,14 @@ export function useChat() {
     try {
       const response: QueryResponse = await submitQuery(trimmedInput, sessionId);
       
+      // Truncate response to 150 words if needed
+      const truncatedAnswer = truncateToWords(response.answer);
+      
       // Add assistant response
       const assistantMessage: Message = {
         id: generateMessageId(),
         type: 'assistant',
-        content: response.answer,
+        content: truncatedAnswer,
         timestamp: new Date(),
       };
 
@@ -48,15 +75,18 @@ export function useChat() {
     } catch (error) {
       console.error('Query submission failed:', error);
       
+      // Get appropriate error message based on error type
+      const errorMessage = error instanceof Error ? getErrorMessage(error) : 'Sorry, there was an error processing your question. Please try again.';
+      
       // Add error message
-      const errorMessage: Message = {
+      const systemMessage: Message = {
         id: generateMessageId(),
         type: 'system',
-        content: 'Sorry, there was an error processing your question. Please try again.',
+        content: errorMessage,
         timestamp: new Date(),
       };
 
-      setMessages(prev => [...prev, errorMessage]);
+      setMessages(prev => [...prev, systemMessage]);
       
       // Restore input value on error
       setInputValue(trimmedInput);

@@ -27,6 +27,10 @@ export function UploadPanel() {
     }
     const upJson = await upRes.json();
     setSessionId(upJson.session_id);
+    // Store session ID in localStorage immediately after successful upload
+    localStorage.setItem('pdf-chat-session-id', upJson.session_id);
+    // Dispatch custom event to notify other components
+    window.dispatchEvent(new CustomEvent('sessionUpdated'));
     setFilesIndexed(0);
     setTotalFiles(upJson.totals?.files ?? (files?.length ?? 0));
     let tries = 0;

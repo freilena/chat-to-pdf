@@ -30,6 +30,7 @@ export function useIndexingStatus(sessionId: string | null): UseIndexingStatusRe
     if (!sessionId) {
       setStatus(null);
       setError(null);
+      setIsLoading(false);
       return;
     }
 
@@ -41,7 +42,10 @@ export function useIndexingStatus(sessionId: string | null): UseIndexingStatusRe
       
       if (!response.ok) {
         if (response.status === 404) {
-          throw new Error('Session not found');
+          // Session not found - this is normal when no PDFs are uploaded
+          setStatus(null);
+          setError(null);
+          return;
         }
         throw new Error(`Failed to fetch status: ${response.status}`);
       }

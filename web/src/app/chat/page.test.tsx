@@ -77,7 +77,8 @@ describe('ChatPage', () => {
 
     render(<ChatPage />);
     
-    expect(screen.getByText('Please sign in to access the chat.')).toBeInTheDocument();
+    expect(screen.getByText('No PDFs uploaded yet')).toBeInTheDocument();
+    expect(screen.getByText('Please upload your PDF files first to start chatting.')).toBeInTheDocument();
     expect(screen.queryByText('Chat to Your PDF')).not.toBeInTheDocument();
   });
 

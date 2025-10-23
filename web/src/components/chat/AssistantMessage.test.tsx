@@ -184,4 +184,32 @@ describe('AssistantMessage', () => {
     expect(screen.getByText(message)).toBeInTheDocument();
     expect(screen.queryByTestId('typing-indicator')).not.toBeInTheDocument();
   });
+
+  it('renders "not found" message with special styling', () => {
+    render(<AssistantMessage message="Not found in your files." timestamp={new Date()} />);
+    
+    const messageElement = screen.getByTestId('assistant-message');
+    expect(messageElement).toHaveClass('assistant-message');
+    expect(messageElement).toHaveClass('not-found-message');
+    expect(screen.getByText('Not found in your files.')).toBeInTheDocument();
+  });
+
+  it('renders truncated message with ellipsis indicator', () => {
+    const longMessage = 'word '.repeat(600) + 'end...';
+    render(<AssistantMessage message={longMessage} timestamp={new Date()} />);
+    
+    const messageElement = screen.getByTestId('assistant-message');
+    expect(messageElement).toHaveClass('assistant-message');
+    expect(messageElement).toHaveClass('truncated-message');
+    expect(screen.getByText(/word.*end\.\.\./)).toBeInTheDocument();
+  });
+
+  it('does not apply special styling for normal messages', () => {
+    render(<AssistantMessage message="This is a normal response" timestamp={new Date()} />);
+    
+    const messageElement = screen.getByTestId('assistant-message');
+    expect(messageElement).toHaveClass('assistant-message');
+    expect(messageElement).not.toHaveClass('not-found-message');
+    expect(messageElement).not.toHaveClass('truncated-message');
+  });
 });
