@@ -63,12 +63,19 @@ export function useIndexingStatus(sessionId: string | null): UseIndexingStatusRe
 
   // Poll status every 2 seconds when indexing
   useEffect(() => {
+    console.log('Polling effect triggered:', { sessionId, status });
+    
     if (!sessionId || !status || status.status === 'done' || status.status === 'error') {
+      console.log('Polling stopped:', { sessionId: !!sessionId, status: !!status, statusType: status?.status });
       return;
     }
 
+    console.log('Starting polling for session:', sessionId);
     const interval = setInterval(fetchStatus, 2000);
-    return () => clearInterval(interval);
+    return () => {
+      console.log('Clearing polling interval for session:', sessionId);
+      clearInterval(interval);
+    };
   }, [sessionId, status, fetchStatus]);
 
   // Initial fetch when sessionId changes

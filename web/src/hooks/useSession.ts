@@ -17,7 +17,30 @@ export function useSession() {
       setSessionId(null);
       setIsAuthenticated(false);
     }
-  }, []);
+
+    // Listen for localStorage changes (when session is set from UploadPanel)
+    const handleStorageChange = () => {
+      const newSessionId = localStorage.getItem('pdf-chat-session-id');
+      if (newSessionId !== sessionId) {
+        if (newSessionId) {
+          setSessionId(newSessionId);
+          setIsAuthenticated(true);
+        } else {
+          setSessionId(null);
+          setIsAuthenticated(false);
+        }
+      }
+    };
+
+    // Listen for custom events (for same-tab changes)
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('sessionUpdated', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('sessionUpdated', handleStorageChange);
+    };
+  }, [sessionId]);
 
   return {
     sessionId,
