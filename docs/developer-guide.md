@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide provides developers with practical information for working with the chat components implemented in Prompt 6. It covers development setup, common patterns, and best practices.
+This guide provides developers with practical information for working with the chat components implemented in Prompts 6, 7, and 8. It covers development setup, common patterns, and best practices.
 
 ## Development Setup
 
@@ -52,9 +52,15 @@ web/src/
 │       ├── AssistantMessage.tsx  # Assistant message component
 │       ├── AssistantMessage.test.tsx # AssistantMessage tests
 │       ├── SystemMessage.tsx     # System message component
-│       └── SystemMessage.test.tsx # SystemMessage tests
+│       ├── SystemMessage.test.tsx # SystemMessage tests
+│       ├── ChatInput.tsx         # Chat input component
+│       ├── ChatInput.test.tsx    # ChatInput tests
+│       ├── IndexingStatus.tsx    # Indexing status component
+│       └── IndexingStatus.test.tsx # IndexingStatus tests
 ├── hooks/
-│   └── useSession.ts         # Session management hook
+│   ├── useSession.ts         # Session management hook
+│   ├── useChat.ts            # Chat state management hook
+│   └── useIndexingStatus.ts  # Indexing status polling hook
 └── app/
     └── globals.css           # Global styles including chat styles
 ```
