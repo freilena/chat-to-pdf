@@ -1,12 +1,14 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
-import { MessageList, Message } from '@/components/chat/MessageList';
+import React, { useRef, useEffect } from 'react';
+import { MessageList } from '@/components/chat/MessageList';
+import { ChatInput } from '@/components/chat/ChatInput';
 import { useSession } from '@/hooks/useSession';
+import { useChat } from '@/hooks/useChat';
 
 export default function ChatPage() {
   const { sessionId, isAuthenticated } = useSession();
-  const [messages] = useState<Message[]>([]);
+  const { messages, inputValue, setInputValue, isLoading, handleSubmit } = useChat();
   const messageContainerRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -50,22 +52,20 @@ export default function ChatPage() {
       >
         <MessageList 
           messages={messages} 
+          isLoading={isLoading}
           scrollToBottom={scrollToBottom}
         />
       </div>
 
       {/* Input Area */}
       <div data-testid="input-area" className="input-area">
-        <div className="input-container">
-          <textarea 
-            placeholder="Ask a question about your documents..."
-            className="message-input"
-            rows={1}
-          />
-          <button className="send-button" disabled>
-            Send
-          </button>
-        </div>
+        <ChatInput
+          value={inputValue}
+          onChange={setInputValue}
+          onSubmit={handleSubmit}
+          disabled={isLoading}
+          isLoading={isLoading}
+        />
       </div>
     </div>
   );

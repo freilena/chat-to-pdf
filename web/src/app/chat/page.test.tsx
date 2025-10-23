@@ -93,7 +93,7 @@ describe('ChatPage', () => {
   it('renders send button as disabled by default', () => {
     render(<ChatPage />);
     
-    const sendButton = screen.getByRole('button', { name: 'Send' });
+    const sendButton = screen.getByRole('button', { name: 'Send message' });
     expect(sendButton).toBeInTheDocument();
     expect(sendButton).toBeDisabled();
     expect(sendButton).toHaveClass('send-button');

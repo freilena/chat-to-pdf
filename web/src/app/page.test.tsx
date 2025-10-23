@@ -3,6 +3,18 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 // Intentionally import component that does not exist yet per TDD
 import { UploadPanel } from '@/components/UploadPanel';
 
+// Mock Next.js router
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    prefetch: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+    refresh: vi.fn(),
+  }),
+}));
+
 describe('UploadPanel', () => {
   beforeEach(() => {
     vi.resetAllMocks();

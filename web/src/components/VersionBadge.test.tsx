@@ -17,7 +17,7 @@ describe('VersionBadge', () => {
 
   it('should fetch version info from API on mount', async () => {
     const mockVersionData = {
-      version: '0.1.0-dev',
+      version: '0.2.0-dev',
       git_branch: 'feature/test',
       git_commit: 'abc1234',
       git_commit_full: 'abc1234567890abcdef1234567890abcdef123456',
@@ -43,7 +43,7 @@ describe('VersionBadge', () => {
 
   it('should display short version info when loaded', async () => {
     const mockVersionData = {
-      version: '0.1.0-dev',
+      version: '0.2.0-dev',
       git_branch: 'main',
       git_commit: 'abc1234',
       git_commit_full: 'abc1234567890abcdef1234567890abcdef123456',
@@ -60,14 +60,14 @@ describe('VersionBadge', () => {
     render(<VersionBadge />);
 
     await waitFor(() => {
-      expect(screen.getByText(/v0.1.0-dev/)).toBeInTheDocument();
+      expect(screen.getByText(/v0.2.0-dev/)).toBeInTheDocument();
       expect(screen.getByText(/main@abc1234/)).toBeInTheDocument();
     });
   });
 
   it('should show uncommitted changes indicator with asterisk', async () => {
     const mockVersionData = {
-      version: '0.1.0-dev',
+      version: '0.2.0-dev',
       git_branch: 'main',
       git_commit: 'abc1234',
       git_commit_full: 'abc1234567890abcdef1234567890abcdef123456',
@@ -90,7 +90,7 @@ describe('VersionBadge', () => {
 
   it('should expand details when clicked', async () => {
     const mockVersionData = {
-      version: '0.1.0-dev',
+      version: '0.2.0-dev',
       git_branch: 'main',
       git_commit: 'abc1234',
       git_commit_full: 'abc1234567890abcdef1234567890abcdef123456',
@@ -107,14 +107,14 @@ describe('VersionBadge', () => {
     render(<VersionBadge />);
 
     await waitFor(() => {
-      expect(screen.getByText(/v0.1.0-dev/)).toBeInTheDocument();
+      expect(screen.getByText(/v0.2.0-dev/)).toBeInTheDocument();
     });
 
     // Initially, detailed fields should not be visible
     expect(screen.queryByText(/Version:/)).not.toBeInTheDocument();
 
     // Click to expand
-    const badge = screen.getByText(/v0.1.0-dev/).closest('div');
+    const badge = screen.getByText(/v0.2.0-dev/).closest('div');
     if (badge) {
       fireEvent.click(badge);
     }
@@ -171,7 +171,7 @@ describe('VersionBadge', () => {
 
   it('should show clean status when no uncommitted changes', async () => {
     const mockVersionData = {
-      version: '0.1.0-dev',
+      version: '0.2.0-dev',
       git_branch: 'main',
       git_commit: 'abc1234',
       git_commit_full: 'abc1234567890abcdef1234567890abcdef123456',
@@ -188,11 +188,11 @@ describe('VersionBadge', () => {
     render(<VersionBadge />);
 
     await waitFor(() => {
-      expect(screen.getByText(/v0.1.0-dev/)).toBeInTheDocument();
+      expect(screen.getByText(/v0.2.0-dev/)).toBeInTheDocument();
     });
 
     // Click to expand
-    const badge = screen.getByText(/v0.1.0-dev/).closest('div');
+    const badge = screen.getByText(/v0.2.0-dev/).closest('div');
     if (badge) {
       fireEvent.click(badge);
     }
@@ -205,7 +205,7 @@ describe('VersionBadge', () => {
 
   it('should show uncommitted changes warning when changes exist', async () => {
     const mockVersionData = {
-      version: '0.1.0-dev',
+      version: '0.2.0-dev',
       git_branch: 'main',
       git_commit: 'abc1234',
       git_commit_full: 'abc1234567890abcdef1234567890abcdef123456',
@@ -222,11 +222,11 @@ describe('VersionBadge', () => {
     render(<VersionBadge />);
 
     await waitFor(() => {
-      expect(screen.getByText(/v0.1.0-dev/)).toBeInTheDocument();
+      expect(screen.getByText(/v0.2.0-dev/)).toBeInTheDocument();
     });
 
     // Click to expand
-    const badge = screen.getByText(/v0.1.0-dev/).closest('div');
+    const badge = screen.getByText(/v0.2.0-dev/).closest('div');
     if (badge) {
       fireEvent.click(badge);
     }
