@@ -1,6 +1,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { vi } from 'vitest';
 import { useChat } from './useChat';
+import { ConversationMessage } from '@/lib/api/query';
 
 // Mock the query API
 vi.mock('@/lib/api/query', () => ({
@@ -500,7 +501,7 @@ describe('useChat', () => {
     const lastCall = mockSubmitQuery.mock.calls[1];
     const conversationHistory = lastCall[2];
     expect(conversationHistory).toHaveLength(2); // Only user and assistant messages
-    expect(conversationHistory.every(msg => msg.role !== 'system')).toBe(true);
+    expect(conversationHistory.every((msg: ConversationMessage) => msg.role !== 'system')).toBe(true);
   });
 
   it('provides conversation length', () => {
