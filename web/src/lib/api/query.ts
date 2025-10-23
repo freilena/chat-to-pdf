@@ -11,19 +11,31 @@ export interface Citation {
   sentence_span: [number, number];
 }
 
+export interface ConversationMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: string;
+}
+
 export interface QueryRequest {
   query: string;
   session_id: string;
+  conversation_history?: ConversationMessage[];
 }
 
 /**
  * Submits a query to the backend API
  * @param query - The user's question
  * @param sessionId - The current session ID
+ * @param conversationHistory - Optional conversation history for context
  * @returns Promise<QueryResponse> - The response with answer and citations
  * @throws Error if the query fails
  */
-export async function submitQuery(query: string, sessionId: string): Promise<QueryResponse> {
+export async function submitQuery(
+  query: string, 
+  sessionId: string, 
+  conversationHistory?: ConversationMessage[]
+): Promise<QueryResponse> {
   // Validate inputs
   if (!query || query.trim().length === 0) {
     throw new Error('Query cannot be empty');
@@ -44,6 +56,7 @@ export async function submitQuery(query: string, sessionId: string): Promise<Que
       body: JSON.stringify({
         question: trimmedQuery,
         session_id: sessionId,
+        conversation_history: conversationHistory || [],
       }),
     });
 
