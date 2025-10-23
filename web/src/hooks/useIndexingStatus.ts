@@ -42,9 +42,7 @@ export function useIndexingStatus(sessionId: string | null): UseIndexingStatusRe
       
       if (!response.ok) {
         if (response.status === 404) {
-          // Session not found - clear the session ID from localStorage
-          // This handles the case where localStorage has a session ID but backend session expired
-          localStorage.removeItem('pdf-chat-session-id');
+          // Session not found - this is normal when no PDFs are uploaded
           setStatus(null);
           setError(null);
           return;
