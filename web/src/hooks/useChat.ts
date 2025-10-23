@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { Message } from '@/components/chat/MessageList';
-import { submitQuery, QueryResponse } from '@/lib/api/query';
+import { submitQuery, QueryResponse, ConversationMessage } from '@/lib/api/query';
 import { useSession } from './useSession';
 
 // Helper function to truncate text to 500 words (more reasonable limit)
@@ -33,6 +33,18 @@ export function useChat() {
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+  // Convert messages to conversation history format for API
+  const getConversationHistory = useCallback((messages: Message[]): ConversationMessage[] => {
+    return messages
+      .filter(msg => msg.type === 'user' || msg.type === 'assistant')
+      .slice(-10) // Last 10 messages (5 turns)
+      .map(msg => ({
+        role: msg.type as 'user' | 'assistant',
+        content: msg.content,
+        timestamp: msg.timestamp.toISOString(),
+      }));
+  }, []);
+
   const generateMessageId = useCallback(() => {
     return `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }, []);
@@ -58,7 +70,9 @@ export function useChat() {
     setIsLoading(true);
 
     try {
-      const response: QueryResponse = await submitQuery(trimmedInput, sessionId);
+      // Get conversation history for context
+      const conversationHistory = getConversationHistory(messages);
+      const response: QueryResponse = await submitQuery(trimmedInput, sessionId, conversationHistory);
       
       // Truncate response to 150 words if needed
       const truncatedAnswer = truncateToWords(response.answer);
@@ -101,10 +115,12 @@ export function useChat() {
 
   return {
     messages,
+    setMessages,
     inputValue,
     setInputValue,
     isLoading,
     handleSubmit,
     clearMessages,
+    conversationLength: messages.length,
   };
 }

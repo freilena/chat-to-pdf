@@ -11,7 +11,7 @@ import { useIndexingStatus } from '@/hooks/useIndexingStatus';
 
 export default function ChatPage() {
   const { sessionId, isAuthenticated } = useSession();
-  const { messages, inputValue, setInputValue, isLoading, handleSubmit } = useChat();
+  const { messages, inputValue, setInputValue, isLoading, handleSubmit, clearMessages, conversationLength } = useChat();
   const { status: indexingStatus, isIndexing, hasError, progress } = useIndexingStatus(sessionId);
   const messageContainerRef = useRef<HTMLDivElement>(null);
 
@@ -45,7 +45,27 @@ export default function ChatPage() {
           <h1>Chat to Your PDF</h1>
           <div className="session-info">
             <span>Session: {sessionId}</span>
-            <button className="sign-out-btn">Sign out</button>
+            <div className="conversation-controls">
+              {conversationLength > 0 && (
+                <span className="conversation-length">
+                  {conversationLength} messages
+                </span>
+              )}
+              {conversationLength > 0 && (
+                <button 
+                  className="clear-conversation-btn"
+                  onClick={() => {
+                    if (confirm('Are you sure you want to clear the conversation? This action cannot be undone.')) {
+                      clearMessages();
+                    }
+                  }}
+                  title="Clear conversation"
+                >
+                  Clear
+                </button>
+              )}
+              <button className="sign-out-btn">Sign out</button>
+            </div>
           </div>
         </div>
       </header>

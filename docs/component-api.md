@@ -2,7 +2,7 @@
 
 ## Chat Components
 
-This document provides detailed API documentation for all chat-related components implemented in Prompts 6, 7, and 8.
+This document provides detailed API documentation for all chat-related components implemented in Prompts 6, 7, 8, 9, and 10.
 
 ### ChatPage Component
 
@@ -17,6 +17,9 @@ This document provides detailed API documentation for all chat-related component
 - Authentication protection
 - Auto-scroll to bottom
 - Session management integration
+- Conversation history management
+- Clear conversation functionality
+- Conversation length indicator
 
 **Dependencies**:
 - `useSession` hook for authentication
@@ -275,11 +278,13 @@ interface UseIndexingStatusReturn {
 ```typescript
 interface UseChatReturn {
   messages: Message[];               // Array of chat messages
+  setMessages: (messages: Message[]) => void; // Set messages (for testing)
   inputValue: string;                // Current input value
   setInputValue: (value: string) => void; // Set input value
   isLoading: boolean;               // Whether submitting message
   handleSubmit: () => Promise<void>; // Submit current input
   clearMessages: () => void;         // Clear all messages
+  conversationLength: number;        // Number of messages in conversation
 }
 ```
 
@@ -290,15 +295,25 @@ interface UseChatReturn {
 - Generates unique message IDs
 - Manages loading states
 - Prevents multiple simultaneous submissions
+- Conversation history management
+- Context passing to backend API
+- Conversation length tracking
 
 **Message Flow**:
 1. User types message
 2. User submits (Enter or button click)
 3. User message added immediately to chat
 4. Input cleared and loading state set
-5. API call made to `/api/query`
-6. Assistant response added to chat
-7. Loading state cleared
+5. Conversation history converted to API format
+6. API call made to `/api/query` with context
+7. Assistant response added to chat
+8. Loading state cleared
+
+**Conversation History**:
+- Maintains last 10 messages (5 conversation turns)
+- Filters out system messages from context
+- Truncates long assistant responses in context
+- Passes context to backend for improved responses
 
 ## CSS Classes
 
@@ -326,6 +341,11 @@ interface UseChatReturn {
 - `.progress-bar` - Progress bar background
 - `.progress-fill` - Progress bar fill
 - `.indexing-message` - Indexing disabled message
+
+### Conversation Control Classes
+- `.conversation-controls` - Container for conversation controls
+- `.conversation-length` - Message count indicator
+- `.clear-conversation-btn` - Clear conversation button
 
 ### Responsive Classes
 - `.mobile-responsive` - Mobile-specific styling

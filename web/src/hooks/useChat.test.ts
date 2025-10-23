@@ -1,6 +1,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { vi } from 'vitest';
 import { useChat } from './useChat';
+import { ConversationMessage } from '@/lib/api/query';
 
 // Mock the query API
 vi.mock('@/lib/api/query', () => ({
@@ -392,5 +393,176 @@ describe('useChat', () => {
     expect(result.current.messages[1].content).toBe('Test response');
     expect(result.current.messages[2].content).toBe('Second question');
     expect(result.current.messages[3].content).toBe('Test response');
+  });
+
+  it('includes conversation history in subsequent queries', async () => {
+    mockSubmitQuery.mockResolvedValue({ answer: 'Test response', citations: [] });
+    
+    const { result } = renderHook(() => useChat());
+
+    // First query
+    act(() => {
+      result.current.setInputValue('First question');
+    });
+
+    await act(async () => {
+      await result.current.handleSubmit();
+    });
+
+    // Second query
+    act(() => {
+      result.current.setInputValue('Follow-up question');
+    });
+
+    await act(async () => {
+      await result.current.handleSubmit();
+    });
+
+    // Check that conversation history was passed to the second query
+    expect(mockSubmitQuery).toHaveBeenCalledTimes(2);
+    
+    const secondCall = mockSubmitQuery.mock.calls[1];
+    expect(secondCall[0]).toBe('Follow-up question'); // query
+    expect(secondCall[1]).toBe('test-session-123'); // sessionId
+    expect(secondCall[2]).toBeDefined(); // conversationHistory
+    
+    const conversationHistory = secondCall[2];
+    expect(conversationHistory).toHaveLength(2); // First question + first answer
+    expect(conversationHistory[0]).toMatchObject({
+      role: 'user',
+      content: 'First question',
+    });
+    expect(conversationHistory[1]).toMatchObject({
+      role: 'assistant',
+      content: 'Test response',
+    });
+  });
+
+  it('limits conversation history to last 10 messages', async () => {
+    mockSubmitQuery.mockResolvedValue({ answer: 'Test response', citations: [] });
+    
+    const { result } = renderHook(() => useChat());
+
+    // Add 12 messages (6 turns)
+    for (let i = 0; i < 6; i++) {
+      act(() => {
+        result.current.setInputValue(`Question ${i + 1}`);
+      });
+
+      await act(async () => {
+        await result.current.handleSubmit();
+      });
+    }
+
+    // Check that only last 10 messages are included in conversation history
+    const lastCall = mockSubmitQuery.mock.calls[5];
+    const conversationHistory = lastCall[2];
+    expect(conversationHistory).toHaveLength(10); // Last 10 messages
+    
+    // With 6 turns (12 messages), we get all 10 messages (5 turns) since we have less than 10
+    expect(conversationHistory[0].content).toBe('Question 1'); // First message in history
+    expect(conversationHistory[9].content).toBe('Test response'); // Last message in history
+  });
+
+  it('filters out system messages from conversation history', async () => {
+    mockSubmitQuery.mockResolvedValue({ answer: 'Test response', citations: [] });
+    
+    const { result } = renderHook(() => useChat());
+
+    // Add a user message
+    act(() => {
+      result.current.setInputValue('Test question');
+    });
+
+    await act(async () => {
+      await result.current.handleSubmit();
+    });
+
+    // Manually add a system message (simulating an error)
+    act(() => {
+      result.current.setMessages(prev => [...prev, {
+        id: 'system-1',
+        type: 'system',
+        content: 'System error message',
+        timestamp: new Date(),
+      }]);
+    });
+
+    // Add another user message
+    act(() => {
+      result.current.setInputValue('Another question');
+    });
+
+    await act(async () => {
+      await result.current.handleSubmit();
+    });
+
+    // Check that system message is not included in conversation history
+    const lastCall = mockSubmitQuery.mock.calls[1];
+    const conversationHistory = lastCall[2];
+    expect(conversationHistory).toHaveLength(2); // Only user and assistant messages
+    
+    // Verify all messages are either user or assistant (system messages are filtered out)
+    conversationHistory.forEach((msg: ConversationMessage) => {
+      expect(['user', 'assistant']).toContain(msg.role);
+    });
+  });
+
+  it('provides conversation length', () => {
+    const { result } = renderHook(() => useChat());
+
+    expect(result.current.conversationLength).toBe(0);
+
+    act(() => {
+      result.current.setMessages([
+        {
+          id: '1',
+          type: 'user',
+          content: 'Test message',
+          timestamp: new Date(),
+        },
+        {
+          id: '2',
+          type: 'assistant',
+          content: 'Test response',
+          timestamp: new Date(),
+        },
+      ]);
+    });
+
+    expect(result.current.conversationLength).toBe(2);
+  });
+
+  it('clears conversation when clearMessages is called', () => {
+    const { result } = renderHook(() => useChat());
+
+    // Add some messages
+    act(() => {
+      result.current.setMessages([
+        {
+          id: '1',
+          type: 'user',
+          content: 'Test message',
+          timestamp: new Date(),
+        },
+        {
+          id: '2',
+          type: 'assistant',
+          content: 'Test response',
+          timestamp: new Date(),
+        },
+      ]);
+    });
+
+    expect(result.current.messages).toHaveLength(2);
+    expect(result.current.conversationLength).toBe(2);
+
+    // Clear messages
+    act(() => {
+      result.current.clearMessages();
+    });
+
+    expect(result.current.messages).toHaveLength(0);
+    expect(result.current.conversationLength).toBe(0);
   });
 });

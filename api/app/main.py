@@ -316,10 +316,17 @@ async def index_status(session_id: str = Query(...)):
     )
 
 
+class ConversationMessage(BaseModel):
+    """Model for a single conversation message."""
+    role: str  # 'user' or 'assistant'
+    content: str
+    timestamp: str
+
 class QueryRequest(BaseModel):
     """Request model for querying documents."""
     session_id: str
     question: str
+    conversation_history: list[ConversationMessage] = []
 
 
 class Citation(BaseModel):
@@ -352,8 +359,25 @@ async def query(req: QueryRequest) -> QueryResponse:
     if not retriever:
         raise HTTPException(status_code=404, detail="Session retriever not found")
 
+    # Build context from conversation history for better search
+    context_query = req.question
+    if req.conversation_history:
+        # Include recent conversation context in search
+        recent_context = []
+        for msg in req.conversation_history[-4:]:  # Last 4 messages (2 turns)
+            if msg.role == 'user':
+                recent_context.append(f"Previous question: {msg.content}")
+            elif msg.role == 'assistant':
+                # Truncate assistant responses to avoid noise
+                content = msg.content[:200] + "..." if len(msg.content) > 200 else msg.content
+                recent_context.append(f"Previous answer: {content}")
+        
+        if recent_context:
+            context_query = f"{req.question}\n\nContext from previous conversation:\n" + "\n".join(recent_context)
+            print(f"Enhanced query with context: {context_query[:200]}...")
+
     # Search for relevant chunks with multiple strategies
-    search_results = retriever.search(req.question, k=5)
+    search_results = retriever.search(context_query, k=5)
     
     # If no good results, try alternative search terms
     if not search_results or (search_results and search_results[0].get('score', 0) < 0.3):

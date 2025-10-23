@@ -170,6 +170,35 @@ a {
   color: var(--muted);
 }
 
+.conversation-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.conversation-length {
+  font-size: 12px;
+  color: var(--muted);
+  background: var(--border);
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+.clear-conversation-btn {
+  background: #dc2626;
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.clear-conversation-btn:hover {
+  background: #b91c1c;
+}
+
 .sign-out-btn {
   background: none;
   border: 1px solid var(--border);
