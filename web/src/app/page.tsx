@@ -21,21 +21,21 @@ export default function Home() {
             <p className="muted">Upload and index PDFs to start chatting.</p>
           ) : !indexingStatus ? (
             <p className="muted">Upload and index PDFs to start chatting.</p>
-          ) : isIndexing ? (
+          ) : indexingStatus.status === 'indexing' ? (
             <div>
               <p>Indexing your PDFs... This may take a moment.</p>
               <div className="muted">
-                Processing {indexingStatus?.files_indexed || 0} of {indexingStatus?.total_files || 0} files
+                Processing {indexingStatus.files_indexed} of {indexingStatus.total_files} files
               </div>
             </div>
-          ) : hasError ? (
+          ) : indexingStatus.status === 'error' ? (
             <div>
               <p className="error-message">Indexing failed. Please try uploading again.</p>
               <Link href="/chat" className="btn btn-primary">
                 View Chat
               </Link>
             </div>
-          ) : isComplete ? (
+          ) : indexingStatus.status === 'done' ? (
             <div>
               <p>Your PDFs have been indexed and are ready for chat!</p>
               <Link href="/chat" className="btn btn-primary">

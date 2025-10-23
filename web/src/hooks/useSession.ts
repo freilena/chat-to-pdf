@@ -13,6 +13,9 @@ export function useSession() {
     if (storedSessionId) {
       setSessionId(storedSessionId);
       setIsAuthenticated(true);
+    } else {
+      setSessionId(null);
+      setIsAuthenticated(false);
     }
   }, []);
 
