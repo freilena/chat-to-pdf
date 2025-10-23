@@ -7,6 +7,14 @@ vi.mock('@/lib/api/query', () => ({
   submitQuery: vi.fn(),
 }));
 
+// Mock the useSession hook
+vi.mock('./useSession', () => ({
+  useSession: () => ({
+    sessionId: 'test-session-123',
+    isAuthenticated: true,
+  }),
+}));
+
 import { submitQuery } from '@/lib/api/query';
 
 const mockSubmitQuery = submitQuery as ReturnType<typeof vi.fn>;
