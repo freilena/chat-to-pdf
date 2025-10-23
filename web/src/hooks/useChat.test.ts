@@ -279,4 +279,118 @@ describe('useChat', () => {
     expect(result.current.messages[0].content).toBe('First question');
     expect(result.current.messages[2].content).toBe('Second question');
   });
+
+  it('handles "not found" responses with special styling', async () => {
+    const mockResponse = { answer: 'Not found in your files.' };
+    mockSubmitQuery.mockResolvedValue(mockResponse);
+
+    const { result } = renderHook(() => useChat());
+
+    act(() => {
+      result.current.setInputValue('Question not in files');
+    });
+
+    await act(async () => {
+      await result.current.handleSubmit();
+    });
+
+    expect(result.current.messages).toHaveLength(2);
+    expect(result.current.messages[1]).toMatchObject({
+      type: 'assistant',
+      content: 'Not found in your files.',
+    });
+  });
+
+  it('truncates long responses to 150 words', async () => {
+    const longAnswer = 'word '.repeat(200); // 200 words
+    const mockResponse = { answer: longAnswer };
+    mockSubmitQuery.mockResolvedValue(mockResponse);
+
+    const { result } = renderHook(() => useChat());
+
+    act(() => {
+      result.current.setInputValue('Question with long answer');
+    });
+
+    await act(async () => {
+      await result.current.handleSubmit();
+    });
+
+    const responseMessage = result.current.messages[1];
+    const wordCount = responseMessage.content.split(' ').length;
+    expect(wordCount).toBeLessThanOrEqual(150);
+    expect(responseMessage.content).toContain('...');
+  });
+
+  it('handles timeout errors with specific message', async () => {
+    const timeoutError = new Error('Request timeout');
+    mockSubmitQuery.mockRejectedValue(timeoutError);
+
+    const { result } = renderHook(() => useChat());
+
+    act(() => {
+      result.current.setInputValue('Question that times out');
+    });
+
+    await act(async () => {
+      await result.current.handleSubmit();
+    });
+
+    expect(result.current.messages).toHaveLength(2);
+    expect(result.current.messages[1]).toMatchObject({
+      type: 'system',
+      content: 'The request timed out. Please try again with a shorter question.',
+    });
+  });
+
+  it('handles query processing errors with specific message', async () => {
+    const processingError = new Error('Query processing failed');
+    mockSubmitQuery.mockRejectedValue(processingError);
+
+    const { result } = renderHook(() => useChat());
+
+    act(() => {
+      result.current.setInputValue('Question that fails processing');
+    });
+
+    await act(async () => {
+      await result.current.handleSubmit();
+    });
+
+    expect(result.current.messages).toHaveLength(2);
+    expect(result.current.messages[1]).toMatchObject({
+      type: 'system',
+      content: 'Sorry, there was an error processing your question. Please try again.',
+    });
+  });
+
+  it('preserves conversation history across queries', async () => {
+    mockSubmitQuery.mockResolvedValue({ answer: 'Test response' });
+    
+    const { result } = renderHook(() => useChat());
+
+    // First query
+    act(() => {
+      result.current.setInputValue('First question');
+    });
+
+    await act(async () => {
+      await result.current.handleSubmit();
+    });
+
+    // Second query
+    act(() => {
+      result.current.setInputValue('Second question');
+    });
+
+    await act(async () => {
+      await result.current.handleSubmit();
+    });
+
+    expect(result.current.messages).toHaveLength(4); // 2 user + 2 assistant
+    expect(result.current.messages[0].content).toBe('First question');
+    expect(result.current.messages[1].content).toBe('Test response');
+    expect(result.current.messages[2].content).toBe('Second question');
+    expect(result.current.messages[3].content).toBe('Test response');
+  });
 });

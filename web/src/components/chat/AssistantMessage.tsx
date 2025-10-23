@@ -15,8 +15,28 @@ export function AssistantMessage({ message, timestamp, isLoading = false }: Assi
     });
   };
 
+  // Determine if this is a "not found" message
+  const isNotFoundMessage = message === 'Not found in your files.';
+  
+  // Determine if this is a truncated message (ends with "...")
+  const isTruncatedMessage = message.endsWith('...') && message.split(' ').length > 100;
+
+  // Build CSS classes
+  const baseClasses = 'assistant-message message';
+  const specialClasses = [];
+  
+  if (isNotFoundMessage) {
+    specialClasses.push('not-found-message');
+  }
+  
+  if (isTruncatedMessage) {
+    specialClasses.push('truncated-message');
+  }
+  
+  const className = [baseClasses, ...specialClasses].join(' ');
+
   return (
-    <div data-testid="assistant-message" className="assistant-message message">
+    <div data-testid="assistant-message" className={className}>
       {isLoading ? (
         <div data-testid="typing-indicator" className="typing-indicator">
           <div className="typing-dots">

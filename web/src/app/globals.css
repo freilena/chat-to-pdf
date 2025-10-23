@@ -226,6 +226,29 @@ a {
   border: 1px solid var(--border);
 }
 
+.assistant-message.not-found-message {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fbbf24;
+}
+
+.assistant-message.truncated-message {
+  background: #f0f9ff;
+  color: #1e40af;
+  border: 1px solid #93c5fd;
+  position: relative;
+}
+
+.assistant-message.truncated-message::after {
+  content: "Response truncated to 150 words";
+  position: absolute;
+  bottom: -20px;
+  right: 0;
+  font-size: 11px;
+  color: var(--muted);
+  font-style: italic;
+}
+
 .system-message {
   align-self: center;
   background: var(--border);
