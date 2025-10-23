@@ -24,11 +24,13 @@ export default function ChatPage() {
     scrollToBottom();
   }, [messages]);
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !sessionId) {
     return (
       <div className="chat-container">
-        <div className="error-message">
-          <p>Please sign in to access the chat.</p>
+        <div className="empty-state">
+          <h2>No PDFs uploaded yet</h2>
+          <p>Please upload your PDF files first to start chatting.</p>
+          <a href="/" className="btn btn-primary">Go to Upload</a>
         </div>
       </div>
     );
