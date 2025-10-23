@@ -19,6 +19,8 @@ export default function Home() {
           <h3 style={{ marginTop: 0 }}>Chat</h3>
           {!isAuthenticated || !sessionId ? (
             <p className="muted">Upload and index PDFs to start chatting.</p>
+          ) : !indexingStatus ? (
+            <p className="muted">Upload and index PDFs to start chatting.</p>
           ) : isIndexing ? (
             <div>
               <p>Indexing your PDFs... This may take a moment.</p>
