@@ -3,12 +3,15 @@
 import React, { useRef, useEffect } from 'react';
 import { MessageList } from '@/components/chat/MessageList';
 import { ChatInput } from '@/components/chat/ChatInput';
+import { IndexingStatus } from '@/components/chat/IndexingStatus';
 import { useSession } from '@/hooks/useSession';
 import { useChat } from '@/hooks/useChat';
+import { useIndexingStatus } from '@/hooks/useIndexingStatus';
 
 export default function ChatPage() {
   const { sessionId, isAuthenticated } = useSession();
   const { messages, inputValue, setInputValue, isLoading, handleSubmit } = useChat();
+  const { status: indexingStatus, isIndexing, isComplete, hasError, progress } = useIndexingStatus(sessionId);
   const messageContainerRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -55,6 +58,14 @@ export default function ChatPage() {
           isLoading={isLoading}
           scrollToBottom={scrollToBottom}
         />
+        
+        {/* Indexing Status */}
+        {indexingStatus && (
+          <IndexingStatus 
+            status={indexingStatus} 
+            progress={progress} 
+          />
+        )}
       </div>
 
       {/* Input Area */}
@@ -63,9 +74,23 @@ export default function ChatPage() {
           value={inputValue}
           onChange={setInputValue}
           onSubmit={handleSubmit}
-          disabled={isLoading}
+          disabled={isLoading || isIndexing}
           isLoading={isLoading}
         />
+        
+        {/* Indexing Message */}
+        {isIndexing && (
+          <div className="indexing-message" role="status" aria-live="polite">
+            <p>Chat will be enabled once indexing completes...</p>
+          </div>
+        )}
+        
+        {/* Error Message */}
+        {hasError && (
+          <div className="error-message" role="alert" aria-live="polite">
+            <p>Indexing failed. Please try uploading your files again.</p>
+          </div>
+        )}
       </div>
     </div>
   );
