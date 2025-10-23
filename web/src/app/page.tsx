@@ -9,16 +9,6 @@ export default function Home() {
   const { isAuthenticated, sessionId } = useSession();
   const { status: indexingStatus, isIndexing, isComplete, hasError } = useIndexingStatus(sessionId);
 
-  // Debug logging
-  console.log('Home page state:', {
-    isAuthenticated,
-    sessionId,
-    indexingStatus,
-    isIndexing,
-    isComplete,
-    hasError
-  });
-
   return (
     <div className="grid grid-2">
       <div>

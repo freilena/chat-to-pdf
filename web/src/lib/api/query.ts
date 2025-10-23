@@ -42,14 +42,21 @@ export async function submitQuery(query: string, sessionId: string): Promise<Que
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        query: trimmedQuery,
+        question: trimmedQuery,
         session_id: sessionId,
       }),
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || `Query failed with status ${response.status}`);
+      let errorMessage = `Query failed with status ${response.status}`;
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.error || errorData.detail || errorMessage;
+      } catch {
+        // If we can't parse the error response, use the status text
+        errorMessage = response.statusText || errorMessage;
+      }
+      throw new Error(errorMessage);
     }
 
     const data = await response.json();
