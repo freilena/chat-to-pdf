@@ -501,7 +501,11 @@ describe('useChat', () => {
     const lastCall = mockSubmitQuery.mock.calls[1];
     const conversationHistory = lastCall[2];
     expect(conversationHistory).toHaveLength(2); // Only user and assistant messages
-    expect(conversationHistory.every((msg: ConversationMessage) => msg.role !== 'system')).toBe(true);
+    
+    // Verify all messages are either user or assistant (system messages are filtered out)
+    conversationHistory.forEach((msg: ConversationMessage) => {
+      expect(['user', 'assistant']).toContain(msg.role);
+    });
   });
 
   it('provides conversation length', () => {
