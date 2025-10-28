@@ -26,16 +26,16 @@ class OpenAIHealth:
 class OpenAIClient:
     """Client for interacting with OpenAI API."""
     
-    def __init__(self, api_key: Optional[str] = None, model: str = "gpt-4o-mini"):
+    def __init__(self, api_key: Optional[str] = None, model: Optional[str] = None):
         """
         Initialize OpenAI client.
         
         Args:
-            api_key: OpenAI API key (defaults to environment variable)
-            model: Model to use (default: gpt-4o-mini for cost efficiency)
+            api_key: OpenAI API key (defaults to OPENAI_API_KEY env var)
+            model: Model to use (defaults to OPENAI_MODEL env var, fallback: gpt-4o-mini)
         """
         self.api_key = api_key or os.getenv("OPENAI_API_KEY")
-        self.model = model
+        self.model = model or os.getenv("OPENAI_MODEL", "gpt-4o-mini")
         
         if not self.api_key:
             logger.warning("OPENAI_API_KEY not set")

@@ -30,22 +30,52 @@ The Chat-To-PDF application uses OpenAI's GPT-4o-mini model for AI-powered answe
 ### Environment Variables
 
 ```bash
+# Required: Your OpenAI API key
 export OPENAI_API_KEY="your-api-key-here"
+
+# Optional: Model selection (default: gpt-4o-mini)
+export OPENAI_MODEL="gpt-4o-mini"
 ```
 
-**Required**: The application will not generate AI responses without a valid API key.
+**OPENAI_API_KEY**: Required - The application will not generate AI responses without a valid API key.
+
+**OPENAI_MODEL**: Optional - Defaults to `gpt-4o-mini`. Supported values:
+- `gpt-4o-mini` - Fast, cost-effective (recommended for most use cases)
+- `gpt-4o` - More powerful, 12x more expensive
+- `gpt-4-turbo` - Most powerful, 40x more expensive
+- `gpt-3.5-turbo` - Older, cheaper (not recommended)
 
 ### Model Configuration
 
-- **Model**: `gpt-4o-mini`
+- **Default Model**: `gpt-4o-mini`
   - Cost-effective OpenAI model
-  - High-quality responses
+  - High-quality responses for Q&A tasks
   - Good balance of speed and quality
+  - Configurable via `OPENAI_MODEL` environment variable
   
 - **Parameters**:
   - `max_tokens`: 250 (default) - approximately 150-200 words
   - `temperature`: 0.7 - balanced creativity and consistency
   - `top_p`: 0.9 - nucleus sampling for diversity
+
+### Comparing Models
+
+Test different models to find the right balance for your use case:
+
+```bash
+# Test with gpt-4o-mini (default, fast & cheap)
+export OPENAI_MODEL="gpt-4o-mini"
+docker compose up -d
+
+# Compare with gpt-4o (more powerful)
+export OPENAI_MODEL="gpt-4o"
+docker compose restart api
+```
+
+**Cost Comparison per 1000 queries**:
+- `gpt-4o-mini`: ~$0.20
+- `gpt-4o`: ~$2.50 (12x more)
+- `gpt-4-turbo`: ~$8.00 (40x more)
 
 ### Context Management
 

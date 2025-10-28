@@ -6,6 +6,10 @@
 
 ```bash
 export OPENAI_API_KEY="your-api-key-here"
+
+# Optional: Choose model (default: gpt-4o-mini)
+export OPENAI_MODEL="gpt-4o-mini"  # Fast & cheap (recommended for testing)
+# export OPENAI_MODEL="gpt-4o"      # More powerful (12x cost, use for comparison)
 ```
 
 ### 2. Build and Start Services
