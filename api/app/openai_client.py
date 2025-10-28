@@ -35,7 +35,9 @@ class OpenAIClient:
             model: Model to use (defaults to OPENAI_MODEL env var, fallback: gpt-4o-mini)
         """
         self.api_key = api_key or os.getenv("OPENAI_API_KEY")
-        self.model = model or os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+        # Ensure model is always a string (never None)
+        model_from_env = model or os.getenv("OPENAI_MODEL") or "gpt-4o-mini"
+        self.model: str = model_from_env
         
         if not self.api_key:
             logger.warning("OPENAI_API_KEY not set")
@@ -130,7 +132,7 @@ class OpenAIClient:
         Raises:
             Exception: If generation fails
         """
-        messages = []
+        messages: List[Dict[str, Any]] = []
         
         # Add conversation context if provided (last 4 messages for efficiency)
         if context:
@@ -146,13 +148,15 @@ class OpenAIClient:
         try:
             response = await self.client.chat.completions.create(
                 model=self.model,
-                messages=messages,
+                messages=messages,  # type: ignore[arg-type]
                 max_tokens=max_tokens,
                 temperature=0.7,  # Balanced creativity/consistency
                 top_p=0.9
             )
             
-            return response.choices[0].message.content
+            # Handle potential None content
+            content = response.choices[0].message.content
+            return content if content is not None else ""
             
         except AuthenticationError as e:
             logger.error(f"OpenAI authentication failed: {e}")
