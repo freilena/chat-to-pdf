@@ -7,6 +7,8 @@ import io
 import os
 import subprocess
 import uuid
+import logging
+import sys
 from pathlib import Path
 from typing import Dict, Any
 
@@ -17,6 +19,15 @@ from pypdf import PdfReader
 from pydantic import BaseModel
 from app.retrieval import HybridRetriever, chunk_text
 from app.ollama_client import get_ollama_client, OllamaHealth
+from app.ollama_init import initialize_ollama
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[logging.StreamHandler(sys.stdout)]
+)
+logger = logging.getLogger(__name__)
 
 
 def get_version() -> str:
@@ -185,6 +196,35 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize Ollama service on startup."""
+    print("🚀 FastAPI startup event triggered")  # Print statement to ensure we see this
+    logger.info("🚀 Starting Chat-To-PDF application...")
+    
+    # Initialize Ollama in background (non-blocking)
+    # This allows the API to start even if Ollama initialization is slow
+    asyncio.create_task(_init_ollama_background())
+
+async def _init_ollama_background():
+    """Initialize Ollama in background without blocking startup."""
+    try:
+        print("📋 Starting Ollama initialization in background...")
+        success = await initialize_ollama()
+        if success:
+            logger.info("✅ Ollama initialization completed successfully")
+            print("✅ Ollama initialization completed successfully")
+        else:
+            logger.warning(
+                "⚠️ Ollama initialization failed or incomplete. "
+                "Queries will use fallback responses."
+            )
+            print("⚠️ Ollama initialization failed or incomplete")
+    except Exception as e:
+        logger.error(f"❌ Ollama initialization error: {e}")
+        print(f"❌ Ollama initialization error: {e}")
+        logger.warning("Queries will use fallback responses.")
 
 # In-memory session store for MVP/TDD
 SESSION_STATUS: Dict[str, Dict[str, int | str]] = {}
