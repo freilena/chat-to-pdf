@@ -54,7 +54,7 @@ jobs:
         run: PYTHONPATH=. mypy app
 
   backend-tests:
-    name: Backend Tests
+    name: Backend Tests (Core)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -79,9 +79,83 @@ jobs:
           path: ~/.cache/huggingface
           key: ${{ runner.os }}-huggingface-all-MiniLM-L6-v2
       
-      - name: Run pytest
+      - name: Run pytest (excluding OpenAI tests)
         working-directory: ./api
-        run: PYTHONPATH=. pytest tests/ -v
+        run: |
+          PYTHONPATH=. pytest tests/ -v \
+            --ignore=tests/test_openai.py \
+            --ignore=tests/test_openai_endpoints.py \
+            --ignore=tests/test_openai_security.py \
+            --ignore=tests/test_openai_smoke.py \
+            --ignore=tests/test_query_with_openai.py \
+            --ignore=tests/test_e2e_openai_integration.py
+
+  openai-tests-mocked:
+    name: OpenAI Tests (Mocked - No Cost)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: 'api/requirements.txt'
+      
+      - name: Install dependencies
+        working-directory: ./api
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Run OpenAI mocked tests
+        working-directory: ./api
+        run: |
+          PYTHONPATH=. pytest \
+            tests/test_openai.py \
+            tests/test_openai_endpoints.py \
+            tests/test_openai_security.py \
+            tests/test_query_with_openai.py \
+            -v
+        env:
+          # These tests are fully mocked - no real API calls
+          OPENAI_API_KEY: "sk-test-mock-key-for-ci"
+          OPENAI_MODEL: "gpt-4o-mini"
+
+  openai-smoke-test:
+    name: OpenAI Smoke Test (Real API - Minimal Cost)
+    runs-on: ubuntu-latest
+    # Only run on main branch to minimize API costs
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature/openai-integration'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: 'api/requirements.txt'
+      
+      - name: Install dependencies
+        working-directory: ./api
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Run OpenAI smoke test
+        working-directory: ./api
+        run: PYTHONPATH=. pytest tests/test_openai_smoke.py -v -s
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_MODEL: "gpt-4o-mini"
+      
+      - name: Report cost (informational)
+        if: always()
+        run: echo "💰 Smoke test cost - ~\$0.000001 (one millionth of a dollar)"
 
   frontend-lint:
     name: Frontend Linting
