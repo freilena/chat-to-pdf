@@ -8,7 +8,7 @@ These tests verify that the query endpoint correctly:
 """
 
 import pytest
-from unittest.mock import patch, AsyncMock, Mock
+from unittest.mock import patch, AsyncMock
 from fastapi.testclient import TestClient
 from app.main import app, SESSION_STATUS, SESSION_RETRIEVERS
 from app.retrieval import HybridRetriever

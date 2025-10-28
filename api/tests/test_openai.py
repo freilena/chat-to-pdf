@@ -3,7 +3,7 @@
 import pytest
 from unittest.mock import Mock, patch, AsyncMock
 from datetime import datetime
-from app.openai_client import OpenAIClient, OpenAIHealth, get_openai_client
+from app.openai_client import OpenAIClient, get_openai_client
 from openai import AuthenticationError, RateLimitError
 
 

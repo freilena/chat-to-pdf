@@ -12,7 +12,7 @@ These tests verify:
 import pytest
 import os
 from unittest.mock import patch, AsyncMock, Mock
-from app.openai_client import OpenAIClient, OpenAIHealth
+from app.openai_client import OpenAIClient
 from openai import AuthenticationError, RateLimitError
 
 
@@ -31,13 +31,12 @@ class TestAPIKeySecurity:
     
     def test_api_key_warning_when_missing(self, capsys):
         """Test that a warning is issued when API key is missing."""
-        import logging
         from openai import OpenAIError
         
         with patch.dict(os.environ, {}, clear=True):
             # OpenAI client raises error if API key is not provided
             with pytest.raises(OpenAIError):
-                client = OpenAIClient(api_key=None)
+                OpenAIClient(api_key=None)
     
     def test_api_key_from_env_variable(self, monkeypatch):
         """Test that API key can be loaded from environment."""

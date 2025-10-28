@@ -186,12 +186,12 @@ def test_full_pdf_to_ai_workflow(test_pdf_path):
     print("\n" + "="*60)
     print("✅ END-TO-END TEST PASSED!")
     print("="*60)
-    print(f"📊 Summary:")
+    print("📊 Summary:")
     print(f"   - PDF uploaded: {test_pdf_path.name}")
-    print(f"   - Indexing: Success")
-    print(f"   - Questions asked: 2")
-    print(f"   - AI responses: Valid and contextual")
-    print(f"   - Total cost: ~$0.0005")
+    print("   - Indexing: Success")
+    print("   - Questions asked: 2")
+    print("   - AI responses: Valid and contextual")
+    print("   - Total cost: ~$0.0005")
     print("="*60 + "\n")
 
 

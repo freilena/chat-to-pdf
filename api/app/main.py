@@ -17,7 +17,7 @@ from pypdf import PdfReader
 from pydantic import BaseModel
 from typing import Any
 from app.retrieval import HybridRetriever, chunk_text
-from app.openai_client import get_openai_client, OpenAIHealth
+from app.openai_client import get_openai_client
 
 
 def get_version() -> str:

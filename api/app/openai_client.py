@@ -10,7 +10,7 @@ import logging
 from typing import Optional, Dict, Any, List
 from dataclasses import dataclass
 from datetime import datetime
-from openai import AsyncOpenAI, AuthenticationError, RateLimitError, APIError
+from openai import AsyncOpenAI, AuthenticationError, RateLimitError
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +65,7 @@ class OpenAIClient:
         try:
             # Simple test to verify API is accessible
             # Using minimal tokens to keep costs low
-            response = await self.client.chat.completions.create(
+            await self.client.chat.completions.create(
                 model=self.model,
                 messages=[{"role": "user", "content": "test"}],
                 max_tokens=1  # Minimal to reduce cost

@@ -46,7 +46,7 @@ async def test_openai_connection_smoke_test():
         f"Error message present: {health.error_message}"
     
     print("   ✅ OpenAI connection verified!")
-    print(f"   Cost: ~$0.000001")
+    print("   Cost: ~$0.000001")
 
 
 def test_openai_key_format():
@@ -72,4 +72,4 @@ def test_openai_model_configured():
     assert model in ['gpt-4o-mini', 'gpt-4o', 'gpt-4-turbo', 'gpt-3.5-turbo'], \
         f"Unexpected model: {model}"
     
-    print(f"   ✅ Model configuration valid")
+    print("   ✅ Model configuration valid")
