@@ -15,7 +15,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pypdf import PdfReader
 from pydantic import BaseModel
+from typing import Any
 from app.retrieval import HybridRetriever, chunk_text
+from app.openai_client import get_openai_client, OpenAIHealth
 
 
 def get_version() -> str:
@@ -190,6 +192,35 @@ def version():
         "git_uncommitted_changes": git_info["uncommitted_changes"],
         "environment": environment,
     }
+
+
+@app.get("/fastapi/openai/health")
+async def openai_health() -> Dict[str, Any]:
+    """
+    Check OpenAI API health and availability.
+    
+    Returns:
+        Health status with model information
+    """
+    try:
+        client = await get_openai_client()
+        health = await client.health_check()
+        
+        return {
+            "status": "healthy" if health.is_healthy else "unhealthy",
+            "api_available": health.is_available,
+            "model": health.model,
+            "error_message": health.error_message,
+            "last_check": health.last_check.isoformat() if health.last_check else None
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "api_available": False,
+            "model": "gpt-4o-mini",
+            "error_message": str(e),
+            "last_check": None
+        }
 
 
 @app.post("/fastapi/upload")
@@ -413,65 +444,52 @@ async def query(req: QueryRequest) -> QueryResponse:
             citations=[]
         )
 
-    # For MVP, return a more comprehensive answer based on search results
-    # TODO: Integrate with Ollama for proper answer generation
-    
-    # Try to find specific information based on the question
-    question_lower = req.question.lower()
-    
-    # Look for specific patterns in the question
-    if any(word in question_lower for word in ['name', 'person', 'who', 'whom']):
-        # Look for name patterns in the results
-        for result in search_results:
-            text = result['metadata']['text']
-            # Look for common name patterns
-            import re
-            name_patterns = [
-                r'Report for ([A-Za-z\s]+)',
-                r'Name: ([A-Za-z\s]+)',
-                r'([A-Z][a-z]+ [A-Z][a-z]+)',  # First Last pattern
-                r'Kateryna Kalashnykova',  # Specific name we know is in the document
-                r'([A-Z][a-z]+ [A-Z][a-z]+ [A-Z][a-z]+)',  # First Middle Last pattern
-            ]
-            
-            for pattern in name_patterns:
-                matches = re.findall(pattern, text)
-                if matches:
-                    name = matches[0].strip()
-                    if len(name) > 3:  # Reasonable name length
-                        answer = f"Based on your files: The person this report is about is {name}."
-                        print(f"Found name: {name} using pattern: {pattern}")
-                        break
-            else:
-                continue
-            break
-        else:
-            # Fallback to regular search results
-            answer = f"Based on your files: {search_results[0]['metadata']['text'][:500]}..."
-    else:
-        # Regular search results
-        if len(search_results) == 1:
-            # Single result - return more context
-            top_result = search_results[0]
-            text = top_result['metadata']['text']
-            # Return up to 1000 characters instead of 200
-            if len(text) > 1000:
-                answer = f"Based on your files: {text[:1000]}..."
-            else:
-                answer = f"Based on your files: {text}"
-        else:
-            # Multiple results - combine them for better context
-            combined_text = ""
-            for i, result in enumerate(search_results[:3]):  # Use top 3 results
-                text = result['metadata']['text']
-                if len(text) > 300:  # Limit each result to 300 chars
-                    text = text[:300] + "..."
-                combined_text += f"Result {i+1}: {text}\n\n"
-            
-            if len(combined_text) > 1500:
-                combined_text = combined_text[:1500] + "..."
-            
-            answer = f"Based on your files:\n\n{combined_text}"
+    # Generate answer using OpenAI based on retrieved context
+    try:
+        # Build context from search results
+        context_chunks = []
+        for i, result in enumerate(search_results[:3]):  # Top 3 results
+            chunk_text = result['metadata']['text']
+            context_chunks.append(f"[Source {i+1}]: {chunk_text}")
+        
+        context = "\n\n".join(context_chunks)
+        
+        # Build conversation context for OpenAI
+        conversation_context = []
+        if req.conversation_history:
+            for msg in req.conversation_history[-4:]:  # Last 4 messages
+                conversation_context.append({
+                    "role": msg.role,
+                    "content": msg.content
+                })
+        
+        # Create prompt for OpenAI
+        prompt = f"""You are a helpful assistant answering questions about documents.
+
+Based on the following context from the user's documents, answer their question. Be concise and accurate.
+
+Context from documents:
+{context}
+
+Question: {req.question}
+
+Answer based on the context above. If the answer is not in the context, say so."""
+
+        # Get OpenAI client and generate answer
+        openai_client = await get_openai_client()
+        answer = await openai_client.generate_text(
+            prompt=prompt,
+            context=conversation_context,
+            max_tokens=250
+        )
+        
+        print(f"✅ Generated answer using OpenAI: {answer[:100]}...")
+        
+    except Exception as e:
+        # Fallback to simple context if OpenAI fails
+        print(f"⚠️ OpenAI generation failed: {e}, using fallback")
+        top_result = search_results[0]['metadata']['text']
+        answer = f"Based on your files: {top_result[:500]}..."
 
     # Convert search results to citations
     citations = []

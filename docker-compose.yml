@@ -30,4 +30,5 @@ services:
       - ./.git:/app/.git:ro
     environment:
       - PYTHONPATH=/app
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
     command: ["uvicorn", "app.main:app", "--reload", "--host", "0.0.0.0", "--port", "8000"]
