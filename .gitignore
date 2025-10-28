@@ -1,11 +1,29 @@
-.DS_Store
-node_modules
-.env*
-.venv
-__pycache__
-*.pyc
-dist
-build
-.next
-coverage
+# Environment variables (contains secrets)
+.env
 
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.pytest_cache/
+
+# Node
+node_modules/
+.next/
+*.log
+
+# Docker
+.docker/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

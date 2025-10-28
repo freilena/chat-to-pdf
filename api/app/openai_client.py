@@ -80,8 +80,9 @@ class OpenAIClient:
             return health
             
         except AuthenticationError as e:
-            error_msg = f"OpenAI authentication failed: {str(e)}"
-            logger.error(error_msg)
+            # Sanitize error message to avoid exposing API key
+            error_msg = "OpenAI authentication failed: Invalid API key"
+            logger.error(f"OpenAI authentication failed: {str(e)}")
             
             health = OpenAIHealth(
                 is_healthy=False,
