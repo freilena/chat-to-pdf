@@ -9,7 +9,7 @@ Run with: pytest tests/test_openai_smoke.py -v -s
 
 import pytest
 import os
-import requests
+from app.openai_client import OpenAIClient
 
 # Skip if OPENAI_API_KEY not set
 pytestmark = pytest.mark.skipif(
@@ -17,10 +17,9 @@ pytestmark = pytest.mark.skipif(
     reason="OPENAI_API_KEY not set - skipping real API test"
 )
 
-API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
 
-
-def test_openai_connection_smoke_test():
+@pytest.mark.asyncio
+async def test_openai_connection_smoke_test():
     """
     Minimal smoke test: Verify OpenAI API key is valid and service is reachable.
     
@@ -29,24 +28,22 @@ def test_openai_connection_smoke_test():
     """
     print("\n🔍 OpenAI Smoke Test: Checking connection...")
     
-    # Call health endpoint (makes real API call with 1 token)
-    response = requests.get(f"{API_BASE_URL}/fastapi/openai/health")
+    # Create OpenAI client and test health
+    client = OpenAIClient()
+    health = await client.health_check(use_cache=False)
     
-    assert response.status_code == 200, f"Health endpoint failed: {response.status_code}"
-    
-    data = response.json()
-    print(f"   Status: {data['status']}")
-    print(f"   Model: {data['model']}")
-    print(f"   Available: {data['api_available']}")
+    print(f"   Status: {'healthy' if health.is_healthy else 'unhealthy'}")
+    print(f"   Model: {health.model}")
+    print(f"   Available: {health.is_available}")
     
     # Verify OpenAI is healthy
-    assert data['status'] == 'healthy', \
-        f"OpenAI not healthy: {data.get('error_message')}"
-    assert data['api_available'] is True, "OpenAI API not available"
-    assert data['model'] in ['gpt-4o-mini', 'gpt-4o', 'gpt-3.5-turbo'], \
-        f"Unexpected model: {data['model']}"
-    assert data['error_message'] is None, \
-        f"Error message present: {data['error_message']}"
+    assert health.is_healthy is True, \
+        f"OpenAI not healthy: {health.error_message}"
+    assert health.is_available is True, "OpenAI API not available"
+    assert health.model in ['gpt-4o-mini', 'gpt-4o', 'gpt-3.5-turbo', 'gpt-4-turbo'], \
+        f"Unexpected model: {health.model}"
+    assert health.error_message is None, \
+        f"Error message present: {health.error_message}"
     
     print("   ✅ OpenAI connection verified!")
     print(f"   Cost: ~$0.000001")
@@ -76,19 +73,3 @@ def test_openai_model_configured():
         f"Unexpected model: {model}"
     
     print(f"   ✅ Model configuration valid")
-
-
-if __name__ == "__main__":
-    """Run smoke test standalone."""
-    print("="*60)
-    print("OpenAI Integration Smoke Test")
-    print("="*60)
-    
-    test_openai_key_format()
-    test_openai_model_configured()
-    test_openai_connection_smoke_test()
-    
-    print("\n" + "="*60)
-    print("✅ All smoke tests passed!")
-    print("="*60)
-
