@@ -10,7 +10,7 @@ import logging
 from typing import Optional, Dict, Any, List
 from dataclasses import dataclass
 from datetime import datetime
-import openai
+from openai import AsyncOpenAI, AuthenticationError, RateLimitError, APIError
 
 logger = logging.getLogger(__name__)
 
@@ -40,8 +40,8 @@ class OpenAIClient:
         if not self.api_key:
             logger.warning("OPENAI_API_KEY not set")
         
-        # Initialize OpenAI client
-        openai.api_key = self.api_key
+        # Initialize OpenAI client (v1.x API)
+        self.client = AsyncOpenAI(api_key=self.api_key)
         self._health_cache: Optional[OpenAIHealth] = None
     
     async def health_check(self, use_cache: bool = True) -> OpenAIHealth:
@@ -63,7 +63,7 @@ class OpenAIClient:
         try:
             # Simple test to verify API is accessible
             # Using minimal tokens to keep costs low
-            response = await openai.ChatCompletion.acreate(
+            response = await self.client.chat.completions.create(
                 model=self.model,
                 messages=[{"role": "user", "content": "test"}],
                 max_tokens=1  # Minimal to reduce cost
@@ -79,7 +79,7 @@ class OpenAIClient:
             self._health_cache = health
             return health
             
-        except openai.error.AuthenticationError as e:
+        except AuthenticationError as e:
             error_msg = f"OpenAI authentication failed: {str(e)}"
             logger.error(error_msg)
             
@@ -143,7 +143,7 @@ class OpenAIClient:
         messages.append({"role": "user", "content": prompt})
         
         try:
-            response = await openai.ChatCompletion.acreate(
+            response = await self.client.chat.completions.create(
                 model=self.model,
                 messages=messages,
                 max_tokens=max_tokens,
@@ -153,11 +153,11 @@ class OpenAIClient:
             
             return response.choices[0].message.content
             
-        except openai.error.AuthenticationError as e:
+        except AuthenticationError as e:
             logger.error(f"OpenAI authentication failed: {e}")
             raise Exception(f"OpenAI authentication failed: {e}")
             
-        except openai.error.RateLimitError as e:
+        except RateLimitError as e:
             logger.error(f"OpenAI rate limit exceeded: {e}")
             raise Exception(f"OpenAI rate limit exceeded: {e}")
             
