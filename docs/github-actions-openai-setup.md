@@ -121,6 +121,11 @@ pytest tests/test_openai_smoke.py -v -s
 - API key validation
 - Model configuration
 
+**How it works**:
+- Directly tests `OpenAIClient` (no server required)
+- Makes 1 real API call to OpenAI
+- Perfect for CI environments
+
 **Why only on main?**
 - Minimizes API costs
 - Validates production integration
@@ -155,6 +160,13 @@ After pushing code:
    - **3 smoke tests** (run on main branch)
 
 ### Troubleshooting
+
+#### ❌ Smoke Test Fails: "Connection refused" or "localhost:8000"
+**Problem**: Old version of smoke test tried to connect to running server  
+**Solution**: 
+- **Fixed in commit `daf1f9e`** - smoke test now uses OpenAI client directly
+- Pull latest changes: `git pull origin feature/openai-integration`
+- No server needed - works in CI environments
 
 #### ❌ Smoke Test Fails: "OPENAI_API_KEY not set"
 **Problem**: Secret not configured  
