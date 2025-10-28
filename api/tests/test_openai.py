@@ -4,7 +4,7 @@ import pytest
 from unittest.mock import Mock, patch, AsyncMock
 from datetime import datetime
 from app.openai_client import OpenAIClient, OpenAIHealth, get_openai_client
-import openai
+from openai import AuthenticationError, RateLimitError
 
 
 class TestOpenAIClient:
@@ -34,7 +34,7 @@ class TestOpenAIClient:
         mock_response = Mock()
         mock_response.choices = [Mock(message=Mock(content="test"))]
         
-        with patch.object(openai.ChatCompletion, 'acreate', new=AsyncMock(return_value=mock_response)):
+        with patch.object(client.client.chat.completions, 'create', new=AsyncMock(return_value=mock_response)):
             health = await client.health_check()
             
             assert health.is_healthy is True
@@ -46,8 +46,8 @@ class TestOpenAIClient:
     @pytest.mark.asyncio
     async def test_health_check_auth_error(self, client):
         """Test health check with authentication error."""
-        with patch.object(openai.ChatCompletion, 'acreate', new=AsyncMock(
-            side_effect=openai.error.AuthenticationError("Invalid API key")
+        with patch.object(client.client.chat.completions, 'create', new=AsyncMock(
+            side_effect=AuthenticationError("Invalid API key", response=Mock(), body=None)
         )):
             health = await client.health_check()
             
@@ -58,7 +58,7 @@ class TestOpenAIClient:
     @pytest.mark.asyncio
     async def test_health_check_general_error(self, client):
         """Test health check with general error."""
-        with patch.object(openai.ChatCompletion, 'acreate', new=AsyncMock(
+        with patch.object(client.client.chat.completions, 'create', new=AsyncMock(
             side_effect=Exception("Network error")
         )):
             health = await client.health_check()
@@ -73,7 +73,7 @@ class TestOpenAIClient:
         mock_response = Mock()
         mock_response.choices = [Mock(message=Mock(content="test"))]
         
-        with patch.object(openai.ChatCompletion, 'acreate', new=AsyncMock(return_value=mock_response)) as mock_create:
+        with patch.object(client.client.chat.completions, 'create', new=AsyncMock(return_value=mock_response)) as mock_create:
             # First call - should make API call
             health1 = await client.health_check()
             assert mock_create.call_count == 1
@@ -90,7 +90,7 @@ class TestOpenAIClient:
         mock_response = Mock()
         mock_response.choices = [Mock(message=Mock(content="test"))]
         
-        with patch.object(openai.ChatCompletion, 'acreate', new=AsyncMock(return_value=mock_response)) as mock_create:
+        with patch.object(client.client.chat.completions, 'create', new=AsyncMock(return_value=mock_response)) as mock_create:
             # First call
             await client.health_check()
             assert mock_create.call_count == 1
@@ -105,7 +105,7 @@ class TestOpenAIClient:
         mock_response = Mock()
         mock_response.choices = [Mock(message=Mock(content="Generated response"))]
         
-        with patch.object(openai.ChatCompletion, 'acreate', new=AsyncMock(return_value=mock_response)) as mock_create:
+        with patch.object(client.client.chat.completions, 'create', new=AsyncMock(return_value=mock_response)) as mock_create:
             result = await client.generate_text("Test prompt")
             
             assert result == "Generated response"
@@ -131,7 +131,7 @@ class TestOpenAIClient:
             {"role": "user", "content": "How are you?"}
         ]
         
-        with patch.object(openai.ChatCompletion, 'acreate', new=AsyncMock(return_value=mock_response)) as mock_create:
+        with patch.object(client.client.chat.completions, 'create', new=AsyncMock(return_value=mock_response)) as mock_create:
             result = await client.generate_text("Tell me more", context=context)
             
             assert result == "Response with context"
@@ -154,7 +154,7 @@ class TestOpenAIClient:
             for i in range(6)
         ]
         
-        with patch.object(openai.ChatCompletion, 'acreate', new=AsyncMock(return_value=mock_response)) as mock_create:
+        with patch.object(client.client.chat.completions, 'create', new=AsyncMock(return_value=mock_response)) as mock_create:
             await client.generate_text("Current prompt", context=context)
             
             # Should only include last 4 from context + current prompt
@@ -168,7 +168,7 @@ class TestOpenAIClient:
         mock_response = Mock()
         mock_response.choices = [Mock(message=Mock(content="Short response"))]
         
-        with patch.object(openai.ChatCompletion, 'acreate', new=AsyncMock(return_value=mock_response)) as mock_create:
+        with patch.object(client.client.chat.completions, 'create', new=AsyncMock(return_value=mock_response)) as mock_create:
             await client.generate_text("Test", max_tokens=100)
             
             call_args = mock_create.call_args
@@ -177,8 +177,8 @@ class TestOpenAIClient:
     @pytest.mark.asyncio
     async def test_generate_text_auth_error(self, client):
         """Test text generation with authentication error."""
-        with patch.object(openai.ChatCompletion, 'acreate', new=AsyncMock(
-            side_effect=openai.error.AuthenticationError("Invalid API key")
+        with patch.object(client.client.chat.completions, 'create', new=AsyncMock(
+            side_effect=AuthenticationError("Invalid API key", response=Mock(), body=None)
         )):
             with pytest.raises(Exception) as exc_info:
                 await client.generate_text("Test")
@@ -188,8 +188,8 @@ class TestOpenAIClient:
     @pytest.mark.asyncio
     async def test_generate_text_rate_limit_error(self, client):
         """Test text generation with rate limit error."""
-        with patch.object(openai.ChatCompletion, 'acreate', new=AsyncMock(
-            side_effect=openai.error.RateLimitError("Rate limit exceeded")
+        with patch.object(client.client.chat.completions, 'create', new=AsyncMock(
+            side_effect=RateLimitError("Rate limit exceeded", response=Mock(), body=None)
         )):
             with pytest.raises(Exception) as exc_info:
                 await client.generate_text("Test")
@@ -199,7 +199,7 @@ class TestOpenAIClient:
     @pytest.mark.asyncio
     async def test_generate_text_general_error(self, client):
         """Test text generation with general error."""
-        with patch.object(openai.ChatCompletion, 'acreate', new=AsyncMock(
+        with patch.object(client.client.chat.completions, 'create', new=AsyncMock(
             side_effect=Exception("Network error")
         )):
             with pytest.raises(Exception) as exc_info:
