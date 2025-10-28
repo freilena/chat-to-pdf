@@ -79,11 +79,15 @@ jobs:
           path: ~/.cache/huggingface
           key: ${{ runner.os }}-huggingface-all-MiniLM-L6-v2
       
-      - name: Run pytest (excluding real API tests)
+      - name: Run pytest (excluding OpenAI tests)
         working-directory: ./api
         run: |
           PYTHONPATH=. pytest tests/ -v \
+            --ignore=tests/test_openai.py \
+            --ignore=tests/test_openai_endpoints.py \
+            --ignore=tests/test_openai_security.py \
             --ignore=tests/test_openai_smoke.py \
+            --ignore=tests/test_query_with_openai.py \
             --ignore=tests/test_e2e_openai_integration.py
 
   openai-tests-mocked:

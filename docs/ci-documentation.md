@@ -61,14 +61,15 @@ The Chat-To-PDF project uses GitHub Actions for comprehensive Continuous Integra
 - **Tool**: Pytest (testing framework)
 - **Python Version**: 3.11
 - **Dependencies**: Installed from `api/requirements.txt`
-- **Command**: `pytest tests/ -v --ignore=tests/test_openai_smoke.py --ignore=tests/test_e2e_openai_integration.py`
+- **Command**: `pytest tests/ -v --ignore=tests/test_openai*.py --ignore=tests/test_query_with_openai.py --ignore=tests/test_e2e_openai_integration.py`
 - **Working Directory**: `./api`
 - **Caching**: 
   - Pip dependencies cached
   - Hugging Face embedding model cached (`~/.cache/huggingface`)
-- **Test Count**: 88 tests (excludes real API tests)
-- **Coverage**: PDF processing, embeddings, search, API endpoints, core functionality
+- **Test Count**: 38 tests (excludes all OpenAI tests)
+- **Coverage**: PDF processing, embeddings, search, API endpoints, core functionality (non-OpenAI)
 - **Cost**: $0 (no real API calls)
+- **Note**: OpenAI tests run in dedicated "OpenAI Tests (Mocked)" job
 
 #### OpenAI Tests (Mocked)
 - **Tool**: Pytest (testing framework)
