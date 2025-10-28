@@ -13,16 +13,17 @@ A browser-based web application that enables users to chat with their PDF docume
 - **Version Tracking**: Git-integrated version system with API endpoints and UI badge
 - **Optimized Build**: CPU-only PyTorch and lightweight embeddings (build time: ~15-20 min vs ~1 hour)
 - **Chat Interface**: Complete responsive chat UI with message components and auto-scroll
+- **AI Answer Generation**: OpenAI GPT-4o-mini integration with RAG (Retrieval-Augmented Generation)
+- **Query Integration**: Context-aware responses using conversation history and document retrieval
 
 ### Planned
-- **Chat Backend Integration**: Message submission and AI response generation
 - **PDF Viewer**: Modal viewer with sentence-level highlighting
-- **AI Answer Generation**: Llama 3.1 8B integration via Ollama
 
 ## Architecture
 
 - **Frontend**: Next.js (React) with TypeScript
 - **Backend**: FastAPI (Python) with hybrid retrieval system and CORS support
+- **LLM**: OpenAI GPT-4o-mini for answer generation with RAG
 - **Vector Store**: FAISS for semantic search (CPU-optimized)
 - **Keyword Search**: Simple keyword matching (MVP - Tantivy planned for future)
 - **Embeddings**: sentence-transformers with all-MiniLM-L6-v2 (80MB, 2x faster)
@@ -34,6 +35,7 @@ A browser-based web application that enables users to chat with their PDF docume
 ### Prerequisites
 - Docker and Docker Compose
 - Node.js 18+ (for local development)
+- OpenAI API key (required for AI features)
 
 ### Development Setup
 
@@ -42,12 +44,17 @@ A browser-based web application that enables users to chat with their PDF docume
    cd code/pdf-chat
    ```
 
-2. **Start the services**:
+2. **Configure OpenAI API key**:
+   ```bash
+   export OPENAI_API_KEY="your-api-key-here"
+   ```
+
+3. **Start the services**:
    ```bash
    docker compose up -d
    ```
 
-3. **Access the application**:
+4. **Access the application**:
    - Frontend: http://localhost:3000
    - API: http://localhost:8000
    - API Docs: http://localhost:8000/docs
@@ -74,7 +81,8 @@ A browser-based web application that enables users to chat with their PDF docume
 
 - `POST /fastapi/upload` - Upload PDF files
 - `GET /fastapi/index/status` - Check indexing progress
-- `POST /fastapi/query` - Ask questions about uploaded documents
+- `POST /fastapi/query` - Ask questions about uploaded documents (with OpenAI)
+- `GET /fastapi/openai/health` - Check OpenAI API health and availability
 - `GET /healthz` - Health check (includes version)
 - `GET /version` - Version info (version, git branch, commit, date, environment)
 
@@ -92,7 +100,7 @@ docker compose exec api pytest -v
 docker compose exec web npm run test
 ```
 
-**Test Coverage**: 81+ tests covering:
+**Test Coverage**: 100+ tests covering:
 - PDF upload and validation
 - Text chunking and embeddings
 - Vector and keyword indexing
@@ -102,6 +110,9 @@ docker compose exec web npm run test
 - Version badge component behavior
 - Chat interface and message components
 - Responsive design and accessibility
+- OpenAI client functionality
+- OpenAI health endpoint
+- Error handling for auth, rate limits, and network issues
 
 ## Continuous Integration
 
@@ -116,7 +127,7 @@ The project uses GitHub Actions for automated CI/CD with comprehensive quality c
 ### CI Jobs
 1. **Backend Linting** - Ruff code style and quality checks
 2. **Backend Type Checking** - MyPy static type analysis
-3. **Backend Tests** - Pytest test suite (32 tests)
+3. **Backend Tests** - Pytest test suite (50+ tests)
 4. **Frontend Linting** - ESLint code quality checks
 5. **Frontend Type Checking** - TypeScript compilation validation
 6. **Frontend Tests** - Vitest test suite (81 tests)
@@ -143,8 +154,9 @@ code/pdf-chat/
 ├── api/                   # FastAPI backend
 │   ├── app/
 │   │   ├── main.py        # API routes, session mgmt, version endpoints
-│   │   └── retrieval.py   # Hybrid search implementation
-│   ├── tests/             # Comprehensive test suite (8+ test files)
+│   │   ├── retrieval.py   # Hybrid search implementation
+│   │   └── openai_client.py  # OpenAI API wrapper
+│   ├── tests/             # Comprehensive test suite (10+ test files)
 │   └── requirements.txt   # Python dependencies (optimized)
 ├── web/                   # Next.js frontend
 │   ├── src/
@@ -178,6 +190,13 @@ code/pdf-chat/
 - Vector search: Top 20 results
 - Keyword search: Top 20 results
 - Final results: Top 8 after fusion
+
+### OpenAI Configuration
+- Model: gpt-4o-mini (cost-effective, high-quality responses)
+- Max tokens per response: 250 (~150-200 words)
+- Context window: Last 4 conversation messages
+- Temperature: 0.7 (balanced creativity/consistency)
+- Health check caching: 30 seconds
 
 ## Contributing
 
