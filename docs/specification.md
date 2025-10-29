@@ -6,7 +6,8 @@
 - ✅ **Frontend Upload UI**: Complete (drag-drop, progress, validation)
 - ✅ **Frontend Chat UI**: Complete (message components, responsive layout)
 - ✅ **Testing**: Complete (81 passing tests)
-- ⏳ **Pending**: OAuth auth, PDF viewer, Ollama integration
+- ✅ **OpenAI Integration**: Complete (GPT-4o-mini for answer generation)
+- ⏳ **Pending**: OAuth auth, PDF viewer
 
 - **Platform**: Browser-based web app
 - **Auth**: Required; OAuth via Google and Apple - *Pending*
@@ -38,10 +39,10 @@
   - Default scope: all uploaded PDFs; optional filter to selected files
   - Dedupe: prefer unique file+page+span; collapse near-duplicates
 - **Answer generation**
-  - Model: self-hosted Llama 3.1 8B Instruct via Ollama (CPU)
-  - Input to model: user question + minimal chat context + fused top-8 snippets (trimmed)
-  - Output: single response (no streaming), max 150 words
-  - Grounding: answers must be based only on retrieved snippets; if insufficient evidence, respond with: “Not found in your files.”
+  - Model: OpenAI GPT-4o-mini via API (cloud-based)
+  - Input to model: user question + minimal chat context (last 4 messages) + top 3 retrieved snippets
+  - Output: single response (no streaming), max 250 tokens (~150-200 words)
+  - Grounding: answers must be based only on retrieved snippets; if insufficient evidence, respond with: "Not found in your files."
   - Inline markers: always show [1], [2], [3] (min 1, max 3) corresponding to best-matching snippets
 - **Citations UX**
   - Inline markers are always visible and clickable
@@ -85,7 +86,7 @@
     - FAISS vector index (per session, temp dir, CPU-only) **COMPLETED**
     - Simple keyword search (per session, temp dir) **COMPLETED** (Tantivy BM25 planned for future)
     - Hybrid retrieval + RRF fusion **COMPLETED**
-    - Model inference via Ollama (Llama 3.1 8B), with prompt templates for strict grounding and 150-word cap - *Pending*
+    - Model inference via OpenAI GPT-4o-mini API, with prompt engineering for strict grounding and concise responses **COMPLETED**
     - Session lifecycle and deletion *Pending* (basic implementation completed. TODO review if refactoring is required)
 - **Data storage (per session)**
   - Temp directory structure:
@@ -133,7 +134,7 @@
 - Start/stop services
   - Start: `docker compose up -d` in app directory.
   - Stop: `docker compose down`.
-  - Health: `docker ps`; check Caddy, Next.js, FastAPI, Ollama containers are healthy.
+  - Health: `docker ps`; check Caddy, Next.js, FastAPI containers are healthy; verify OpenAI API connectivity via `/fastapi/openai/health`.
 - Deploy
   - Pull repo/branch; `docker compose build --pull` then `docker compose up -d --remove-orphans`.
   - Migrations: not applicable (no persistent DB in MVP).
@@ -145,7 +146,8 @@
   - Logs: CloudWatch Logs groups per service via awslogs driver.
   - Metrics: scrape endpoints if/when CloudWatch Agent is added; otherwise inspect application logs for latency counters.
 - Incidents
-  - High latency: check CPU/RAM on EC2; verify Ollama model loaded; inspect retrieval/generation timing in logs.
+  - High latency: check CPU/RAM on EC2; verify OpenAI API connectivity; inspect retrieval/generation timing in logs.
+  - OpenAI errors: verify OPENAI_API_KEY in environment; check API rate limits and quota; review OpenAI service status.
   - Indexing failures: re-run job; validate PDF text layer; confirm EBS free space.
   - TLS errors: check Caddy certificates and DNS A record to Elastic IP.
   - Session cleanup: confirm 60‑minute reaper running; orphaned session dirs under `/srv/app/sessions` should be deleted.
@@ -153,14 +155,14 @@
 ### Hosting & deployment (AWS, MVP)
 - EC2: single instance (t3.xlarge, 4 vCPU, 16 GB RAM), Ubuntu 22.04, gp3 100 GB EBS (encrypted).
 - Networking: default VPC, public subnet, Elastic IP; Security Group allows 80/443 from 0.0.0.0/0, SSH 22 restricted to Kate’s public IP (/32). Prefer AWS SSM Session Manager over SSH when possible.
-- DNS/TLS: Route 53 A record to Elastic IP; Caddy terminates TLS with Let’s Encrypt (auto‑renew).
-- Containers: Docker Compose services — Next.js, FastAPI, Ollama, Caddy.
-- Secrets: AWS SSM Parameter Store; injected as environment variables at service start.
+- DNS/TLS: Route 53 A record to Elastic IP; Caddy terminates TLS with Let's Encrypt (auto‑renew).
+- Containers: Docker Compose services — Next.js, FastAPI, Caddy.
+- Secrets: AWS SSM Parameter Store (OPENAI_API_KEY, OAuth credentials); injected as environment variables at service start.
 - Logs: container stdout → CloudWatch Logs (awslogs driver); include `session_id` and `request_id` in structured JSON logs.
 - Metrics: expose Prometheus endpoints; (later) optional CloudWatch Agent scraping. Not included for MVP.
 - Session storage: per‑session temp dirs under `/srv/app/sessions/<session_id>` on encrypted EBS; deleted on 60‑minute inactivity or sign‑out.
 - Backups: none (ephemeral by design).
-- Scale path (later): swap Caddy for ALB + ACM; split FastAPI/Ollama to separate EC2 or ECS; add ASG.
+- Scale path (later): swap Caddy for ALB + ACM; split FastAPI to separate EC2 or ECS; add ASG; consider OpenAI API rate limit optimization.
 
 ### Observability & metrics (MVP)
 - Logs: structured JSON to stdout for frontend/backend; shipped to CloudWatch Logs. Include `session_id`, `request_id`, `user_id` (if authenticated).

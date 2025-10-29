@@ -119,4 +119,4 @@ web/src/hooks/useIndexingStatus.ts
 - Connects to `/api/query` endpoint for message submission
 - Polls `/api/index/status` endpoint for indexing progress
 - Ready for backend API integration
-- Prepared for Ollama LLM integration
+- Fully integrated with OpenAI GPT-4o-mini for AI responses

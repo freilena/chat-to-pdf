@@ -321,7 +321,7 @@ Integration:
 
 ---
 
- ### **Prompt 11: OpenAI Service Setup & Health Check**
+ ### **Prompt 11: OpenAI Service Setup & Health Check** ✅ COMPLETED
 
 ```
 Set up OpenAI API integration with GPT-4o-mini model and implement health checking.
@@ -394,7 +394,7 @@ Integration:
 
 ---
 
-### **Prompt 12: Prompt Engineering & Context Building**
+### **Prompt 12: Prompt Engineering & Context Building** ✅ COMPLETED
 
 ```
 Create the prompt engineering logic for OpenAI GPT-4o-mini that ensures grounded, concise answers with proper context.
@@ -459,7 +459,7 @@ Integration:
 
 ---
 
-### **Prompt 13: OpenAI Integration in Query Endpoint**
+### **Prompt 13: OpenAI Integration in Query Endpoint** ✅ COMPLETED
 
 ```
 Connect the OpenAI API to the query endpoint to generate grounded answers using RAG.
