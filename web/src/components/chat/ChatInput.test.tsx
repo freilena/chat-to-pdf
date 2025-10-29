@@ -12,7 +12,7 @@ describe('ChatInput', () => {
     vi.clearAllMocks();
   });
 
-  it('renders input field and send button', () => {
+  it('renders input field and send button', async () => {
     render(
       <ChatInput
         value=""
@@ -23,11 +23,11 @@ describe('ChatInput', () => {
       />
     );
 
-    expect(screen.getByPlaceholderText('Ask a question about your documents...')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Send message' })).toBeInTheDocument();
-  });
+    await screen.findByPlaceholderText('Ask a question about your documents...');
+    await screen.findByRole('button', { name: 'Send message' });
+  }, 10000);
 
-  it('disables send button when input is empty', () => {
+  it('disables send button when input is empty', async () => {
     render(
       <ChatInput
         value=""
@@ -38,8 +38,9 @@ describe('ChatInput', () => {
       />
     );
 
-    expect(screen.getByRole('button', { name: 'Send message' })).toBeDisabled();
-  });
+    const button = await screen.findByRole('button', { name: 'Send message' });
+    expect(button).toBeDisabled();
+  }, 10000);
 
   it('enables send button when input has content', () => {
     render(

@@ -7,8 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "test": "vitest run --reporter=verbose --no-coverage",
+    "test:watch": "vitest",
+    "test:single": "vitest run --reporter=verbose --no-coverage --run"
   },
   "dependencies": {
     "next": "15.5.5",

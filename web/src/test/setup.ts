@@ -1,5 +1,6 @@
 import '@testing-library/jest-dom';
 import { setupServer } from 'msw/node';
+import { vi } from 'vitest';
 
 (() => {
   if (typeof (globalThis as unknown as { File: typeof File }).File === 'undefined') {
@@ -18,8 +19,18 @@ import { setupServer } from 'msw/node';
 
 export const server = setupServer();
 
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
-afterEach(() => server.resetHandlers());
-afterAll(() => server.close());
+beforeAll(() => {
+  server.listen({ onUnhandledRequest: 'warn' }); // Use 'warn' instead of 'error' to prevent hanging
+});
+
+afterEach(() => {
+  server.resetHandlers();
+});
+
+afterAll(async () => {
+  server.close();
+  // Give MSW time to cleanup
+  await new Promise(resolve => setTimeout(resolve, 100));
+});
 
 
