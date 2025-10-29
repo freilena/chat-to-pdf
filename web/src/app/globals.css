@@ -395,32 +395,43 @@ a {
 }
 
 .clear-conversation-btn {
-  background: #dc2626;
+  background: var(--error);
   color: white;
   border: none;
-  padding: 4px 8px;
-  border-radius: 4px;
+  padding: 6px 12px;
+  border-radius: 8px;
   font-size: 12px;
+  font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(239, 68, 68, 0.2);
 }
 
 .clear-conversation-btn:hover {
-  background: #b91c1c;
+  background: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
 }
 
 .sign-out-btn {
-  background: none;
+  background: var(--card);
   border: 1px solid var(--border);
-  color: var(--foreground);
-  padding: 6px 12px;
-  border-radius: 6px;
+  color: var(--fg);
+  padding: 8px 16px;
+  border-radius: 10px;
   cursor: pointer;
   font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .sign-out-btn:hover {
-  background: var(--border);
+  background: var(--card);
+  border-color: var(--primary);
+  color: var(--primary);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .message-container {

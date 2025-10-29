@@ -128,14 +128,15 @@ export function UploadPanel() {
           </div>
         </div>
       )}
-      <button 
-        onClick={handleAskClick}
-        disabled={!isIndexingComplete || !sessionId} 
-        className={isIndexingComplete && sessionId ? 'btn btn-primary' : 'btn'}
-        aria-label="chat-btn"
-      >
-        {isIndexingComplete ? 'Ask Questions' : 'Ask'}
-      </button>
+      {isIndexingComplete && sessionId && (
+        <button 
+          onClick={handleAskClick}
+          className="btn btn-primary"
+          aria-label="chat-btn"
+        >
+          Ask Questions
+        </button>
+      )}
       {sessionId && <div aria-label="session-id">{sessionId}</div>}
     </div>
   );
