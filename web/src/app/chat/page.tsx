@@ -74,7 +74,6 @@ export default function ChatPage() {
         <div className="header-content">
           <h1>Chat to Your PDF</h1>
           <div className="session-info">
-            <span>Session: {sessionId}</span>
             <div className="conversation-controls">
               {conversationLength > 0 && (
                 <span className="conversation-length">

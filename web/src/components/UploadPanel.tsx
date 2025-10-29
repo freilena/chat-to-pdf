@@ -137,7 +137,6 @@ export function UploadPanel() {
           Ask Questions
         </button>
       )}
-      {sessionId && <div aria-label="session-id">{sessionId}</div>}
     </div>
   );
 }
