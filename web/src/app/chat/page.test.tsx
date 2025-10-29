@@ -1,5 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { http, HttpResponse } from 'msw';
+import { server } from '@/test/setup';
 import ChatPage from './page';
 
 // Mock Next.js router
@@ -23,6 +25,25 @@ describe('ChatPage', () => {
       sessionId: 'test-session-123',
       isAuthenticated: true,
     });
+
+    // Setup MSW handlers for API endpoints
+    server.use(
+      http.get('/api/index/status', ({ request }) => {
+        const url = new URL(request.url);
+        const sessionId = url.searchParams.get('session_id');
+        
+        // Return done status for any valid session ID
+        if (sessionId) {
+          return HttpResponse.json({
+            status: 'done',
+            total_files: 1,
+            files_indexed: 1,
+          });
+        }
+        
+        return HttpResponse.json({ error: 'Session not found' }, { status: 404 });
+      })
+    );
   });
 
   it('renders chat page with header and session info', () => {

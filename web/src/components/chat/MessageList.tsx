@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { UserMessage } from './UserMessage';
 import { AssistantMessage } from './AssistantMessage';
 import { SystemMessage } from './SystemMessage';
@@ -17,11 +17,43 @@ interface MessageListProps {
 }
 
 export function MessageList({ messages, isLoading = false, scrollToBottom }: MessageListProps) {
+  const bottomRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    if (scrollToBottom) {
-      scrollToBottom();
-    }
-  }, [messages, scrollToBottom]);
+    // Scroll when messages or loading state changes
+    // Use both scrollIntoView and parent scrollToBottom for maximum reliability
+    const scroll = () => {
+      // Try scrolling sentinel into view (this scrolls the nearest scrollable ancestor)
+      if (bottomRef.current) {
+        bottomRef.current.scrollIntoView({ behavior: 'auto', block: 'end', inline: 'nearest' });
+      }
+      // Also call parent scrollToBottom to scroll the container directly
+      if (scrollToBottom) {
+        scrollToBottom();
+      }
+    };
+
+    // Scroll multiple times to ensure it works
+    scroll();
+    
+    const timeout1 = setTimeout(() => {
+      scroll();
+    }, 50);
+    
+    const timeout2 = setTimeout(() => {
+      scroll();
+    }, 150);
+    
+    const timeout3 = setTimeout(() => {
+      scroll();
+    }, 300);
+    
+    return () => {
+      clearTimeout(timeout1);
+      clearTimeout(timeout2);
+      clearTimeout(timeout3);
+    };
+  }, [messages, isLoading, scrollToBottom]);
 
   if (messages.length === 0) {
     return (
@@ -76,6 +108,8 @@ export function MessageList({ messages, isLoading = false, scrollToBottom }: Mes
           <span className="typing-text">AI is thinking...</span>
         </div>
       )}
+      {/* Sentinel element for scrolling */}
+      <div ref={bottomRef} style={{ height: 1 }} />
     </div>
   );
 }

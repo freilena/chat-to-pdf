@@ -17,13 +17,43 @@ export default function ChatPage() {
 
   const scrollToBottom = () => {
     if (messageContainerRef.current) {
-      messageContainerRef.current.scrollTop = messageContainerRef.current.scrollHeight;
+      const container = messageContainerRef.current;
+      // Scroll immediately
+      container.scrollTop = container.scrollHeight;
+      
+      // Then try multiple times to ensure it works
+      requestAnimationFrame(() => {
+        if (messageContainerRef.current) {
+          messageContainerRef.current.scrollTop = messageContainerRef.current.scrollHeight;
+        }
+      });
+      
+      // Additional attempt after a delay to catch late DOM updates
+      setTimeout(() => {
+        if (messageContainerRef.current) {
+          messageContainerRef.current.scrollTop = messageContainerRef.current.scrollHeight;
+        }
+      }, 100);
+      
+      // Final attempt after longer delay for any async content
+      setTimeout(() => {
+        if (messageContainerRef.current) {
+          messageContainerRef.current.scrollTop = messageContainerRef.current.scrollHeight;
+        }
+      }, 300);
     }
   };
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  useEffect(() => {
+    // Also scroll when loading state changes (when AI finishes responding)
+    if (!isLoading) {
+      scrollToBottom();
+    }
+  }, [isLoading]);
 
   if (!isAuthenticated || !sessionId) {
     return (
