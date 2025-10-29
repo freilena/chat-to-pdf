@@ -278,7 +278,7 @@ Task:
    - Trim context if too large
 3. ✅ Update FastAPI query endpoint to handle conversation context:
    - Accept optional conversation history in request
-   - Include context in LLM prompt (prepared for Ollama integration)
+   - Include context in LLM prompt (prepared for OpenAI integration)
    - Test context improves follow-up question handling
 4. ✅ Add conversation controls:
    - "Clear conversation" button
@@ -321,195 +321,215 @@ Integration:
 
 ---
 
-### **Prompt 11: Ollama Service Setup & Health Check**
+ ### **Prompt 11: OpenAI Service Setup & Health Check**
 
 ```
-Set up the Ollama service with Llama 3.1 8B Instruct model and implement health checking.
+Set up OpenAI API integration with GPT-4o-mini model and implement health checking.
 
 Current state:
-- Docker Compose includes Ollama container (or needs to be added)
-- No model is pulled or verified
+- OpenAI API key configuration is needed
+- No OpenAI client wrapper exists
 - No health checking exists
 
 Task:
-1. Update docker-compose.yml to include Ollama service:
-   - Use official Ollama image
-   - Configure CPU-only mode
-   - Mount volume for model storage
-   - Set appropriate memory limits (8GB+)
-2. Create initialization script to pull Llama 3.1 8B model:
-   - Pull model on first startup
-   - Verify model is available
-   - Log model info
-3. Implement Ollama health check endpoint:
-   - GET /api/ollama/health
-   - Check Ollama service is responsive
-   - Verify model is loaded
+1. Configure OpenAI API access:
+   - Add OPENAI_API_KEY environment variable
+   - Add optional OPENAI_MODEL environment variable (default: gpt-4o-mini)
+   - Securely load API key from environment
+   - Configure async OpenAI client
+2. Create OpenAI client wrapper in FastAPI:
+   - Async client initialization with API key
+   - Health checking with caching (30 seconds)
+   - Text generation method with conversation context
+   - Error handling for auth, rate limits, and network issues
+3. Implement OpenAI health check endpoint:
+   - GET /fastapi/openai/health
+   - Check OpenAI API is accessible
+   - Verify authentication works
    - Return model status and metadata
-4. Create Ollama client wrapper in FastAPI:
-   - Connection management
-   - Health checking
-   - Timeout configuration
-   - Error handling
+   - Cache results to minimize API calls
+4. Implement error handling:
+   - AuthenticationError for invalid API keys
+   - RateLimitError for quota exceeded
+   - Network errors with clear messages
+   - Fallback behavior when API unavailable
 5. Write tests for:
-   - Ollama container starts successfully
-   - Model is pulled and available
+   - OpenAI client initialization
    - Health endpoint returns correct status
-   - Ollama client can connect
-   - Error handling for unavailable service
+   - API authentication validation
+   - Health check caching works correctly
+   - Error handling for auth failures
+   - Error handling for rate limits
+   - Error handling for network issues
 
 Requirements:
-- Ollama must be ready before accepting queries
-- Health check should be fast (<500ms)
-- Clear error messages if Ollama is unavailable
-- Automatic retry on temporary failures
+- OpenAI API must be accessible before accepting queries
+- Health check should be fast and cached (<100ms with cache)
+- Minimal API cost for health checks (1 token per check)
+- Clear error messages if OpenAI is unavailable
+- Secure API key handling (never log or expose)
 
 Test-Driven Approach:
-- Write tests for Ollama client initialization
-- Test health check functionality
-- Test error handling for unavailable service
-- Implement Ollama setup to pass tests
+- Write tests for OpenAI client initialization
+- Test health check functionality with mocking
+- Test error handling for various failure modes
+- Test caching behavior
+- Implement OpenAI setup to pass tests
 
 Files to create/modify:
-- `/docker-compose.yml` (Add Ollama service)
-- `/api/scripts/init_ollama.sh` (Model initialization)
-- `/api/app/core/ollama_client.py` (Ollama client)
-- `/api/app/api/routes/health.py` (Health endpoint)
-- `/api/tests/test_ollama_client.py` (Client tests)
-- `/api/tests/test_health.py` (Health endpoint tests)
+- `/api/app/openai_client.py` (OpenAI client wrapper)
+- `/api/app/main.py` (Add health endpoint)
+- `/api/requirements.txt` (Add openai package)
+- `/api/tests/test_openai.py` (Client tests)
+- `/api/tests/test_openai_endpoints.py` (Health endpoint tests)
+- `/docker-compose.yml` (Add OPENAI_API_KEY env var)
 
 Integration:
-- Start Ollama service with docker-compose up
-- Verify model pulls successfully
+- Set OPENAI_API_KEY environment variable
+- Start services with docker-compose up
 - Test health endpoint returns success
-- Confirm Ollama is accessible from FastAPI
+- Verify OpenAI client is accessible from FastAPI
+- Confirm error handling for invalid/missing API keys
 ```
 
 ---
 
-### **Prompt 12: Prompt Template & Grounding Logic**
+### **Prompt 12: Prompt Engineering & Context Building**
 
 ```
-Create the prompt template for Llama 3.1 8B Instruct that ensures grounded, concise answers with citations.
+Create the prompt engineering logic for OpenAI GPT-4o-mini that ensures grounded, concise answers with proper context.
 
 Current state:
-- Ollama service is running with Llama 3.1 8B
+- OpenAI client is working and health checked
 - Query endpoint retrieves relevant snippets
-- No LLM generation is connected yet
+- Need to build proper prompts for RAG
 
 Task:
-1. Create prompt template for grounded Q&A:
-   - System prompt emphasizing grounding and citations
-   - Format for including retrieved snippets
-   - Format for including conversation context
-   - Instructions for 150-word limit
-   - Instructions for citation markers [1]–[3]
-2. Implement prompt builder function:
-   - Takes question, snippets, and context
-   - Constructs full prompt
-   - Handles edge cases (no snippets, very long snippets)
-   - Logs prompt for debugging
-3. Implement "Not found" logic:
-   - Check if retrieved snippets are relevant
-   - Return "Not found in your files." if confidence is low
-   - Use retrieval scores for decision
-4. Write tests for:
-   - Prompt template includes all required elements
-   - Snippets are formatted correctly in prompt
+1. Create context building function:
+   - Format retrieved snippets with clear structure
+   - Include file names and page numbers
+   - Number snippets for citation reference [1], [2], [3]
+   - Truncate long snippets to fit token budget
+2. Implement prompt construction:
+   - System message emphasizing grounding in provided context
+   - Clear instructions to answer only from given documents
+   - Request to keep answers concise (~150 words)
+   - Instruction to cite sources by number
+3. Add conversation context handling:
+   - Include last 4 messages (2 conversation turns)
+   - Format context as chat messages
+   - Balance between conversation history and document context
+4. Implement "Not found" logic:
+   - Check retrieval scores/confidence
+   - Return "Not found in your files." when scores are too low
+   - Define reasonable threshold for relevance
+5. Write tests for:
+   - Context building formats snippets correctly
+   - Prompt includes all required elements
    - Conversation context is included properly
+   - Token limits are respected
    - "Not found" logic triggers when appropriate
-   - Prompt stays within token limits
-   - System instructions are clear and effective
+   - Citations are properly numbered
 
 Requirements:
 - Prompt must enforce strict grounding (no hallucination)
-- Prompt must request inline citation markers
-- Prompt must enforce 150-word response limit
-- Handle cases with 0, 1, 2, or 3+ snippets
-- Trim snippets if they exceed token budget
+- System prompt should prevent making up information
+- Responses should be concise (target ~150 words)
+- Must handle 0-3 retrieved snippets appropriately
+- Conversation context limited to last 4 messages
+- Total context should fit within model token limits
 
 Test-Driven Approach:
-- Write tests for prompt builder with various inputs
+- Write tests for context building with various inputs
+- Test prompt construction with different scenarios
 - Test "Not found" decision logic
-- Test token limit enforcement
-- Test snippet formatting
-- Implement prompt template to pass tests
+- Test token budget management
+- Implement prompt engineering to pass tests
 
 Files to create/modify:
-- `/api/app/core/prompt_builder.py` (Prompt template)
-- `/api/app/core/grounding.py` (Grounding logic)
-- `/api/tests/test_prompt_builder.py` (Prompt tests)
-- `/api/tests/test_grounding.py` (Grounding tests)
+- `/api/app/main.py` (Add context building logic)
+- `/api/tests/test_query_with_openai.py` (Prompt tests)
 
 Integration:
-- Prepare prompt builder for use in query endpoint
+- Prepare context builder for use in query endpoint
 - Test with sample questions and snippets
-- Verify prompt format is compatible with Llama 3.1 8B
+- Verify prompts produce grounded, concise responses
+- Validate citation numbering works correctly
 ```
 
 ---
 
-### **Prompt 13: Ollama Integration in Query Endpoint**
+### **Prompt 13: OpenAI Integration in Query Endpoint**
 
 ```
-Connect the Ollama LLM service to the query endpoint to generate grounded answers.
+Connect the OpenAI API to the query endpoint to generate grounded answers using RAG.
 
 Current state:
-- Ollama service is running and healthy
-- Prompt template is ready
-- Query endpoint retrieves snippets but doesn't generate answers
+- OpenAI client is working and health checked
+- Context building logic is ready
+- Query endpoint retrieves snippets but needs answer generation
 
 Task:
-1. Update query endpoint to generate answers with Ollama:
-   - Build prompt from question, snippets, and context
-   - Call Ollama API to generate response
-   - Handle streaming or non-streaming responses
-   - Parse LLM output
-   - Extract answer text
-2. Implement timeout and fallback logic:
-   - Set 10-second timeout for generation
-   - Return timeout error if exceeded
-   - Log generation time for monitoring
-   - Retry once on transient failures
-3. Handle LLM errors gracefully:
-   - Invalid responses
-   - Empty responses
-   - Malformed citations
-   - Timeout scenarios
-4. Write tests for:
-   - Query endpoint calls Ollama correctly
-   - Prompt is constructed properly
-   - Answer is extracted from LLM response
-   - Timeout errors are handled
-   - Retry logic works
-   - Generated answers respect 150-word limit
+1. Update query endpoint to generate answers with OpenAI:
+   - Build context from top 3 retrieved snippets
+   - Format snippets with file names and page numbers
+   - Construct system prompt for grounded responses
+   - Include conversation history (last 4 messages)
+   - Call OpenAI API to generate response
+   - Parse and return answer
+2. Implement error handling:
+   - AuthenticationError for invalid API keys
+   - RateLimitError for quota exceeded
+   - Network errors and timeouts
+   - Fallback to basic context display on failure
+   - Log generation errors for debugging
+3. Add response validation:
+   - Verify response is non-empty
+   - Check response length is reasonable
+   - Extract any citation markers if present
+   - Validate response format
+4. Implement "Not found" logic:
+   - Check retrieval scores/confidence
+   - Return "Not found in your files." when confidence is low
+   - Define threshold for minimum relevance
+5. Write tests for:
+   - Query endpoint calls OpenAI correctly
+   - Context is built properly from snippets
+   - Conversation history is included
+   - Answer is returned in correct format
+   - AuthenticationError is handled
+   - RateLimitError is handled
+   - Network errors are handled gracefully
    - "Not found" responses when appropriate
+   - Citations are formatted correctly
 
 Requirements:
-- Answer generation must complete within 10 seconds
-- Responses must be grounded in retrieved snippets
-- Handle both successful and failed generations
-- Log all LLM interactions for debugging
+- Answers must be grounded in retrieved snippets
+- Response time target: <5 seconds (OpenAI API call)
+- Handle authentication and rate limit errors gracefully
+- Preserve conversation context for follow-ups
+- Log all API interactions for cost monitoring
 
 Test-Driven Approach:
-- Write tests mocking Ollama API responses
+- Write tests mocking OpenAI API responses
 - Test successful answer generation
-- Test timeout handling
-- Test error scenarios
-- Implement Ollama integration to pass tests
+- Test error handling (auth, rate limit, network)
+- Test "Not found" logic
+- Test conversation context inclusion
+- Implement OpenAI integration to pass tests
 
 Files to modify:
-- `/api/app/api/routes/query.py` (Add Ollama call)
-- `/api/app/core/query_processor.py` (Answer generation)
-- `/api/app/core/ollama_client.py` (Generation method)
-- `/api/tests/test_query.py` (Query endpoint tests)
-- `/api/tests/test_query_processor.py` (Generation tests)
+- `/api/app/main.py` (Update query endpoint)
+- `/api/tests/test_query_with_openai.py` (Integration tests)
+- `/api/tests/test_e2e_openai_integration.py` (E2E tests)
 
 Integration:
 - Test end-to-end query with answer generation
 - Verify answers are grounded and concise
-- Confirm timeout errors are returned properly
+- Test with and without conversation history
+- Confirm error handling works correctly
 - Test "Not found" responses work correctly
+- Validate citation formatting
 ```
 
 ---
@@ -520,7 +540,7 @@ Integration:
 Parse LLM responses to extract citation markers and match them to retrieved snippets.
 
 Current state:
-- Ollama generates answers with citation markers [1], [2], [3]
+- OpenAI generates answers with citation markers [1], [2], [3]
 - Retrieved snippets are available
 - Citations are not being extracted or structured
 
@@ -1787,7 +1807,7 @@ Test Organization:
 - Organize tests by user flow
 - Use descriptive test names
 - Include setup and teardown
-- Mock external services (OAuth, Ollama in some tests)
+- Mock external services (OAuth, OpenAI in some tests)
 
 Files to create:
 - `/tests/integration/test_full_flow.spec.ts` (Main flow)
@@ -1838,7 +1858,7 @@ Task:
    - Add timing instrumentation to key functions
    - Log latency metrics (p50, p95, p99)
    - Track resource usage (CPU, memory)
-   - Monitor Ollama inference time
+   - Monitor OpenAI API response time
 5. Identify and optimize bottlenecks:
    - Profile slow endpoints
    - Optimize retrieval queries
@@ -1882,9 +1902,9 @@ Files to create/modify:
 
 Optimization targets:
 - Retrieval: < 2 seconds
-- Ollama inference: < 7 seconds
+- OpenAI API call: < 5 seconds
 - Overhead: < 1 second
-- Total: ≤10 seconds (p95)
+- Total: ≤8 seconds (p95)
 
 Integration:
 - Run performance tests regularly
