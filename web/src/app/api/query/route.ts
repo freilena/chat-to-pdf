@@ -1,6 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const API_BASE_URL = process.env.API_BASE_URL || 'http://api:8000';
+// Force dynamic rendering (no caching)
+export const dynamic = 'force-dynamic';
+
+// Use Node.js runtime (not Edge)
+export const runtime = 'nodejs';
+
+// Maximum execution time (effective on Vercel Pro, ignored on Hobby)
+export const maxDuration = 60;
+
+const API_BASE_URL = process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 export async function POST(request: NextRequest) {
   try {

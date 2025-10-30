@@ -8,6 +8,7 @@ services:
     environment:
       - NEXT_TELEMETRY_DISABLED=1
       - API_BASE_URL=http://api:8000
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
     volumes:
       - ./web/src:/app/src:delegated
       - ./web/public:/app/public:delegated
@@ -32,4 +33,6 @@ services:
       - PYTHONPATH=/app
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o-mini}
+      - ENVIRONMENT=development
+      - ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
     command: ["uvicorn", "app.main:app", "--reload", "--host", "0.0.0.0", "--port", "8000"]
