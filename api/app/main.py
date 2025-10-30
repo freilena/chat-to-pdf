@@ -408,7 +408,8 @@ async def query(req: QueryRequest) -> QueryResponse:
             print(f"Enhanced query with context: {context_query[:200]}...")
 
     # Search for relevant chunks with multiple strategies
-    search_results = retriever.search(context_query, k=5)
+    # Get more results to ensure document diversity
+    search_results = retriever.search(context_query, k=10)
     
     # If no good results, try alternative search terms
     if not search_results or (search_results and search_results[0].get('score', 0) < 0.3):
@@ -425,7 +426,7 @@ async def query(req: QueryRequest) -> QueryResponse:
             ]
             
             for alt_query in alternative_queries:
-                alt_results = retriever.search(alt_query, k=3)
+                alt_results = retriever.search(alt_query, k=5)
                 if alt_results and alt_results[0].get('score', 0) > 0.1:
                     search_results = alt_results
                     print(f"Using alternative search for: {alt_query}")
@@ -435,7 +436,7 @@ async def query(req: QueryRequest) -> QueryResponse:
     print(f"Search query: {req.question}")
     print(f"Found {len(search_results)} results")
     for i, result in enumerate(search_results):
-        print(f"Result {i+1} score: {result.get('score', 'N/A')}")
+        print(f"Result {i+1} score: {result.get('score', 'N/A')}, doc: {result['metadata'].get('doc_id', 'N/A')}")
         print(f"Result {i+1} text preview: {result['metadata']['text'][:100]}...")
 
     if not search_results:
@@ -444,13 +445,57 @@ async def query(req: QueryRequest) -> QueryResponse:
             citations=[]
         )
 
+    # Ensure document diversity: select at least one chunk from each document
+    # First, collect unique documents from search results
+    doc_chunks: dict[str, list[dict[str, Any]]] = {}
+    for result in search_results:
+        doc_id = result['metadata'].get('doc_id', 'unknown')
+        if doc_id not in doc_chunks:
+            doc_chunks[doc_id] = []
+        doc_chunks[doc_id].append(result)
+    
+    # Select diverse chunks: one best chunk from each document, then fill remaining slots
+    selected_results = []
+    selected_docs = set()
+    
+    # First pass: select top chunk from each document
+    for doc_id, chunks in doc_chunks.items():
+        if chunks:
+            # Sort chunks by score and take the best one
+            best_chunk = max(chunks, key=lambda x: x.get('score', 0))
+            selected_results.append(best_chunk)
+            selected_docs.add(doc_id)
+    
+    # Second pass: fill remaining slots (up to 5 total) with highest-scoring chunks
+    # that aren't already selected
+    remaining_slots = max(0, 5 - len(selected_results))
+    remaining_results = [
+        r for r in search_results 
+        if (r['metadata'].get('doc_id', 'unknown'), r['metadata'].get('chunk_id', -1)) 
+        not in {(sr['metadata'].get('doc_id', 'unknown'), sr['metadata'].get('chunk_id', -1)) 
+                for sr in selected_results}
+    ]
+    remaining_results.sort(key=lambda x: x.get('score', 0), reverse=True)
+    selected_results.extend(remaining_results[:remaining_slots])
+    
+    # Sort final selection by score to maintain quality
+    selected_results.sort(key=lambda x: x.get('score', 0), reverse=True)
+    
+    # Limit to top 3 for context (but now ensuring diversity)
+    context_results = selected_results[:3]
+    
+    print(f"Selected {len(context_results)} chunks from {len(selected_docs)} documents")
+    for i, result in enumerate(context_results):
+        print(f"Selected chunk {i+1} from doc: {result['metadata'].get('doc_id', 'N/A')}")
+
     # Generate answer using OpenAI based on retrieved context
     try:
         # Build context from search results
         context_chunks = []
-        for i, result in enumerate(search_results[:3]):  # Top 3 results
+        for i, result in enumerate(context_results):
             chunk_text = result['metadata']['text']
-            context_chunks.append(f"[Source {i+1}]: {chunk_text}")
+            doc_id = result['metadata'].get('doc_id', 'unknown')
+            context_chunks.append(f"[Source {i+1} from {doc_id}]: {chunk_text}")
         
         context = "\n\n".join(context_chunks)
         
@@ -488,12 +533,15 @@ Answer based on the context above. If the answer is not in the context, say so."
     except Exception as e:
         # Fallback to simple context if OpenAI fails
         print(f"⚠️ OpenAI generation failed: {e}, using fallback")
-        top_result = search_results[0]['metadata']['text']
+        if context_results:
+            top_result = context_results[0]['metadata']['text']
+        else:
+            top_result = search_results[0]['metadata']['text'] if search_results else "No results found"
         answer = f"Based on your files: {top_result[:500]}..."
 
-    # Convert search results to citations
+    # Convert search results to citations (use context_results for diversity)
     citations = []
-    for i, result in enumerate(search_results[:3]):  # Max 3 citations
+    for i, result in enumerate(context_results):  # Max 3 citations
         citation = Citation(
             file=result["metadata"]["doc_id"],
             page=result["metadata"]["page"],
