@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { MessageList, Message } from './MessageList';
 
 // Mock messages data
@@ -47,7 +47,7 @@ describe('MessageList', () => {
     expect(container).toHaveClass('scrollable');
   });
 
-  it('scrolls to bottom when new message is added', () => {
+  it('scrolls to bottom when new message is added', async () => {
     const scrollToBottom = vi.fn();
     const { rerender } = render(<MessageList messages={mockMessages} scrollToBottom={scrollToBottom} />);
     
@@ -61,7 +61,10 @@ describe('MessageList', () => {
     
     rerender(<MessageList messages={newMessages} scrollToBottom={scrollToBottom} />);
     
-    expect(scrollToBottom).toHaveBeenCalled();
+    // scrollToBottom is called inside setTimeout, so we need to wait
+    await waitFor(() => {
+      expect(scrollToBottom).toHaveBeenCalled();
+    });
   });
 
   it('handles loading state correctly', () => {
@@ -76,11 +79,14 @@ describe('MessageList', () => {
     expect(screen.queryByTestId('typing-indicator')).not.toBeInTheDocument();
   });
 
-  it('calls scrollToBottom on initial render', () => {
+  it('calls scrollToBottom on initial render', async () => {
     const scrollToBottom = vi.fn();
     render(<MessageList messages={mockMessages} scrollToBottom={scrollToBottom} />);
     
-    expect(scrollToBottom).toHaveBeenCalled();
+    // scrollToBottom is called inside setTimeout, so we need to wait
+    await waitFor(() => {
+      expect(scrollToBottom).toHaveBeenCalled();
+    });
   });
 
   it('does not call scrollToBottom when not provided', () => {
