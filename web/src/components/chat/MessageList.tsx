@@ -23,24 +23,29 @@ export function MessageList({ messages, isLoading = false, scrollToBottom }: Mes
     // Scroll when messages or loading state changes
     // Use scrollIntoView on sentinel element for reliable scrolling
     if (bottomSentinelRef.current) {
-      // Small delay to ensure DOM is updated
-      setTimeout(() => {
-        if (bottomSentinelRef.current) {
-          bottomSentinelRef.current.scrollIntoView({ behavior: 'auto', block: 'end' });
-        }
-      }, 0);
+      // Check if scrollIntoView is available (not available in jsdom test environment)
+      const hasScrollIntoView = typeof bottomSentinelRef.current.scrollIntoView === 'function';
       
-      // Also try with requestAnimationFrame
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          if (bottomSentinelRef.current) {
+      if (hasScrollIntoView) {
+        // Small delay to ensure DOM is updated
+        setTimeout(() => {
+          if (bottomSentinelRef.current && typeof bottomSentinelRef.current.scrollIntoView === 'function') {
             bottomSentinelRef.current.scrollIntoView({ behavior: 'auto', block: 'end' });
           }
+        }, 0);
+        
+        // Also try with requestAnimationFrame
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            if (bottomSentinelRef.current && typeof bottomSentinelRef.current.scrollIntoView === 'function') {
+              bottomSentinelRef.current.scrollIntoView({ behavior: 'auto', block: 'end' });
+            }
+          });
         });
-      });
+      }
     }
     
-    // Also call parent scrollToBottom as fallback
+    // Also call parent scrollToBottom as fallback (works in all environments)
     if (scrollToBottom) {
       setTimeout(() => {
         scrollToBottom();
