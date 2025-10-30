@@ -1397,30 +1397,31 @@ AI Co-author: Cursor
 
 Before marking this task complete, verify:
 
-- [ ] Task 1: CORS updated in `/api/app/main.py` with strict regex pattern
-- [ ] Task 2: Upload route updated in `/web/src/app/api/upload/route.ts` (with exports)
-- [ ] Task 3: Status route updated in `/web/src/app/api/index/status/route.ts` (with exports)
-- [ ] Task 4: Query route updated in `/web/src/app/api/query/route.ts` (with exports)
-- [ ] Task 5: VersionBadge updated in `/web/src/components/VersionBadge.tsx`
-- [ ] Task 6: Node.js version pinned in `/web/package.json` engines field
-- [ ] Task 7: docker-compose.yml updated
-- [ ] Task 8: Dockerfile.api updated with PORT support
-- [ ] Task 9: `/railway.json` created
-- [ ] Task 10: OpenAI health check toggle added to `/api/app/main.py`
-- [ ] Task 11: `/api/.env.example` created (includes OPENAI_HEALTHCHECK_DISABLED)
-- [ ] Task 12: `/web/.env.example` created
-- [ ] Task 13: `/web/.env.local.example` created
-- [ ] Task 14: Vercel settings documented (no vercel.json file)
-- [ ] Task 15: `/docs/deployment-guide-vercel-railway.md` created (includes state disclaimer)
-- [ ] All files have correct syntax
-- [ ] API routes have dynamic/runtime/maxDuration exports
-- [ ] CORS regex uses strict pattern with anchors
-- [ ] Health check includes cost-saving toggle
-- [ ] Documentation explains in-memory state limitations
-- [ ] No placeholder text remains (like "your-app-name")
-- [ ] Local development tested: `docker compose up` works
-- [ ] Tests pass: `cd web && npm test` and `cd api && pytest`
-- [ ] Changes committed with proper message
+- [x] Task 1: CORS updated in `/api/app/main.py` with strict regex pattern
+- [x] Task 2: Upload route updated in `/web/src/app/api/upload/route.ts` (with exports)
+- [x] Task 3: Status route updated in `/web/src/app/api/index/status/route.ts` (with exports)
+- [x] Task 4: Query route updated in `/web/src/app/api/query/route.ts` (with exports)
+- [x] Task 5: VersionBadge updated in `/web/src/components/VersionBadge.tsx`
+- [x] Task 6: Node.js version pinned in `/web/package.json` engines field
+- [x] Task 7: docker-compose.yml updated
+- [x] Task 8: Dockerfile.api updated with PORT support
+- [x] Task 9: `/railway.json` created
+- [x] Task 10: OpenAI health check toggle added to `/api/app/main.py`
+- [x] Task 11: `/api/.env.example` created (includes OPENAI_HEALTHCHECK_DISABLED)
+- [x] Task 12: `/web/.env.example` created
+- [x] Task 13: `/web/.env.local.example` created
+- [x] Task 14: Vercel settings documented (no vercel.json file)
+- [x] Task 15: `/docs/deployment-guide-vercel-railway.md` created (includes state disclaimer)
+- [x] All files have correct syntax
+- [x] API routes have dynamic/runtime/maxDuration exports
+- [x] CORS regex uses strict pattern with anchors
+- [x] Health check includes cost-saving toggle
+- [x] Documentation explains in-memory state limitations
+- [x] No placeholder text remains (like "your-app-name")
+- [ ] Local development tested: `docker compose up` works (not tested in this session)
+- [x] Tests pass: `cd web && npm test` (140/140 tests passed)
+- [ ] Backend tests: `cd api && pytest` (requires Docker environment)
+- [x] Changes committed with proper message
 
 ---
 
