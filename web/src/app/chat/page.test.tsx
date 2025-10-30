@@ -51,7 +51,7 @@ describe('ChatPage', () => {
     
     expect(screen.getByText('Chat to Your PDF')).toBeInTheDocument();
     expect(screen.getByText('Sign out')).toBeInTheDocument();
-    expect(screen.getByText('Session: test-session-123')).toBeInTheDocument();
+    // Session ID is no longer displayed in UI (stored internally only)
   });
 
   it('renders message container', () => {
@@ -129,7 +129,7 @@ describe('ChatPage', () => {
     expect(chatContainer).toHaveClass('mobile-responsive');
   });
 
-  it('displays session ID correctly', () => {
+  it('renders chat page with different session IDs', () => {
     const customSessionId = 'custom-session-456';
     mockUseSession.mockReturnValue({
       sessionId: customSessionId,
@@ -138,7 +138,10 @@ describe('ChatPage', () => {
 
     render(<ChatPage />);
     
-    expect(screen.getByText(`Session: ${customSessionId}`)).toBeInTheDocument();
+    // Session ID is used internally but not displayed in UI
+    // Verify page renders correctly with different session IDs
+    expect(screen.getByText('Chat to Your PDF')).toBeInTheDocument();
+    expect(screen.getByTestId('chat-container')).toBeInTheDocument();
   });
 
   it('has proper header structure', () => {

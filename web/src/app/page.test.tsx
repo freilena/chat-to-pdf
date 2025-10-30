@@ -20,7 +20,7 @@ describe('UploadPanel', () => {
     vi.resetAllMocks();
   });
 
-  it('disables chat during indexing and shows session id', async () => {
+  it('disables chat during indexing and enables after completion', async () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(
@@ -57,7 +57,7 @@ describe('UploadPanel', () => {
 
     // Shows progress indicator during indexing
     await waitFor(() => expect(screen.getByLabelText('progress')).toHaveTextContent('Indexing'));
-    await waitFor(() => expect(screen.getByLabelText('session-id')).toHaveTextContent('s123'));
+    // Session ID is stored internally but not displayed in UI
     
     // After indexing completes, "Ask Questions" button should appear (not disabled)
     await waitFor(() => {
