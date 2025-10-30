@@ -28,6 +28,14 @@ RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTr
 # but won't trigger pip install or model download
 COPY api /app
 
+# Default port for local development
+# Railway will override this with their dynamic PORT at runtime
+ENV PORT=8000
+
+# EXPOSE must use a literal value (Docker doesn't support variables here)
+# Documents the default port, though Railway will use their assigned port
 EXPOSE 8000
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Use shell form to allow runtime variable substitution
+# Railway injects PORT env var which overrides the ENV default above
+CMD uvicorn app.main:app --host 0.0.0.0 --port $PORT

@@ -25,7 +25,8 @@ export default function VersionBadge() {
     }
 
     // Fetch version from API
-    fetch('http://localhost:8000/version')
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    fetch(`${API_URL}/version`)
       .then((res) => res.json())
       .then((data) => {
         setVersionInfo(data);

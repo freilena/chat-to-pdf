@@ -152,9 +152,22 @@ def get_git_info() -> dict[str, str | bool]:
 app = FastAPI(title="Chat-To-PDF API")
 
 # Configure CORS for frontend access
+# Get allowed origins from environment variable (comma-separated)
+# Default to localhost and 127.0.0.1 for development
+ALLOWED_ORIGINS = os.getenv(
+    "ALLOWED_ORIGINS", 
+    "http://localhost:3000,http://127.0.0.1:3000"
+).split(",")
+
+# Optional: Use regex pattern for Vercel preview deployments
+# This enables wildcard matching for *.vercel.app domains
+# Pattern: ^https://([a-z0-9-]+)\.vercel\.app$ (strict matching, prevents attacks)
+CORS_ORIGIN_REGEX = os.getenv("CORS_ORIGIN_REGEX", None)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Frontend URL
+    allow_origins=ALLOWED_ORIGINS,
+    allow_origin_regex=CORS_ORIGIN_REGEX,  # Supports *.vercel.app
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -202,6 +215,23 @@ async def openai_health() -> Dict[str, Any]:
     Returns:
         Health status with model information
     """
+    # Toggle to skip expensive API calls during health checks
+    # Railway pings health check every ~30 seconds (87,000+ calls/month!)
+    skip_openai_health = os.getenv("OPENAI_HEALTHCHECK_DISABLED", "false").lower() == "true"
+    
+    if skip_openai_health:
+        # Return static response without calling OpenAI
+        # Assumes if env vars are set, OpenAI is available
+        return {
+            "status": "healthy",
+            "api_available": True,
+            "model": os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
+            "error_message": None,
+            "last_check": None,
+            "healthcheck": "skipped (OPENAI_HEALTHCHECK_DISABLED=true)"
+        }
+    
+    # Original health check logic (calls OpenAI)
     try:
         client = await get_openai_client()
         health = await client.health_check()
