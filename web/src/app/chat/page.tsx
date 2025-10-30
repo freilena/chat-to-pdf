@@ -15,15 +15,51 @@ export default function ChatPage() {
   const { status: indexingStatus, isIndexing, hasError, progress } = useIndexingStatus(sessionId);
   const messageContainerRef = useRef<HTMLDivElement>(null);
 
-  const scrollToBottom = () => {
-    if (messageContainerRef.current) {
-      messageContainerRef.current.scrollTop = messageContainerRef.current.scrollHeight;
-    }
-  };
+  const scrollToBottom = React.useCallback(() => {
+    if (!messageContainerRef.current) return;
+    
+    const container = messageContainerRef.current;
+    
+    // Use multiple strategies to ensure scrolling works
+    const performScroll = () => {
+      if (container) {
+        // Force scroll to bottom - try both methods
+        container.scrollTop = container.scrollHeight;
+        // Also try scrolling to a very large number to ensure we're at bottom
+        container.scrollTop = 999999;
+      }
+    };
+    
+    // Immediate scroll
+    performScroll();
+    
+    // Use double requestAnimationFrame to ensure DOM is updated
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        performScroll();
+      });
+    });
+    
+    // Additional delays for async content loading
+    setTimeout(performScroll, 50);
+    setTimeout(performScroll, 150);
+    setTimeout(performScroll, 300);
+    setTimeout(performScroll, 500);
+  }, []);
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, scrollToBottom]);
+
+  useEffect(() => {
+    // Also scroll when loading state changes (when AI finishes responding)
+    if (!isLoading) {
+      // Delay slightly to ensure DOM has updated
+      setTimeout(() => {
+        scrollToBottom();
+      }, 100);
+    }
+  }, [isLoading, scrollToBottom]);
 
   if (!isAuthenticated || !sessionId) {
     return (
@@ -44,7 +80,6 @@ export default function ChatPage() {
         <div className="header-content">
           <h1>Chat to Your PDF</h1>
           <div className="session-info">
-            <span>Session: {sessionId}</span>
             <div className="conversation-controls">
               {conversationLength > 0 && (
                 <span className="conversation-length">

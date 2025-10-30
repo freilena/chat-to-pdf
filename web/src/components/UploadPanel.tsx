@@ -11,6 +11,7 @@ export function UploadPanel() {
   const [totalFiles, setTotalFiles] = React.useState<number>(0);
   const [error, setError] = React.useState<string | null>(null);
   const [isIndexingComplete, setIsIndexingComplete] = React.useState(false);
+  const [isDragging, setIsDragging] = React.useState(false);
 
   async function onUpload() {
     if (!files || files.length === 0) return;
@@ -65,35 +66,48 @@ export function UploadPanel() {
         </div>
       )}
       <div
-        onDragOver={(e) => e.preventDefault()}
+        className={`upload-dropzone ${isDragging ? 'dragging' : ''}`}
+        onDragOver={(e) => {
+          e.preventDefault();
+          setIsDragging(true);
+        }}
+        onDragLeave={(e) => {
+          e.preventDefault();
+          setIsDragging(false);
+        }}
         onDrop={(e) => {
           e.preventDefault();
+          setIsDragging(false);
           setFiles(e.dataTransfer.files);
         }}
-        style={{
-          border: '2px dashed #ccc',
-          background: '#fff',
-          padding: 16,
-          borderRadius: 8,
-          marginBottom: 12,
-        }}
       >
-        <p style={{ margin: 0, color: '#555' }}>Drag & drop PDFs here, or choose files</p>
+        <p className="upload-dropzone-text">
+          📎 Drag & drop PDFs here
+        </p>
+        <p className="upload-dropzone-hint">
+          or click to browse your files
+        </p>
         <input
+          id="pdf-upload-input"
           type="file"
           multiple
           accept="application/pdf"
           onChange={(e) => setFiles(e.target.files)}
           aria-label="pdf-input"
-          style={{ display: 'block', marginTop: 8 }}
+          className="upload-file-input"
         />
+        <label htmlFor="pdf-upload-input" className="upload-file-label">
+          Choose Files
+        </label>
       </div>
       {files && files.length > 0 && (
-        <ul style={{ padding: 0, listStyle: 'none', marginBottom: 12 }}>
+        <ul className="file-list">
           {Array.from(files).map((f) => (
-            <li key={f.name} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px solid #eee' }}>
-              <span>{f.name}</span>
-              <span style={{ color: '#888' }}>{(f.size / (1024 * 1024)).toFixed(2)} MB</span>
+            <li key={f.name} className="file-list-item">
+              <span className="file-name">📄 {f.name}</span>
+              <span className="file-size">
+                {(f.size / (1024 * 1024)).toFixed(2)} MB
+              </span>
             </li>
           ))}
         </ul>
@@ -102,22 +116,27 @@ export function UploadPanel() {
         {isIndexing ? 'Indexing…' : 'Upload'}
       </button>
       {isIndexing && (
-        <div aria-label="progress" style={{ marginTop: 8 }}>
-          <div style={{ height: 6, background: '#eee', borderRadius: 4, overflow: 'hidden' }}>
-            <div style={{ width: `${totalFiles ? (filesIndexed / totalFiles) * 100 : 0}%`, height: '100%', background: '#111' }} />
+        <div className="progress-container" aria-label="progress">
+          <div className="progress-bar">
+            <div 
+              className="progress-bar-fill"
+              style={{ width: `${totalFiles ? (filesIndexed / totalFiles) * 100 : 0}%` }}
+            />
           </div>
-          <div style={{ fontSize: 12, color: '#666', marginTop: 4 }}>{`Indexing ${filesIndexed}/${totalFiles}`}</div>
+          <div className="progress-text">
+            Indexing {filesIndexed} of {totalFiles} files...
+          </div>
         </div>
       )}
-      <button 
-        onClick={handleAskClick}
-        disabled={!isIndexingComplete || !sessionId} 
-        className={isIndexingComplete && sessionId ? 'btn btn-primary' : 'btn'}
-        aria-label="chat-btn"
-      >
-        {isIndexingComplete ? 'Ask Questions' : 'Ask'}
-      </button>
-      {sessionId && <div aria-label="session-id">{sessionId}</div>}
+      {isIndexingComplete && sessionId && (
+        <button 
+          onClick={handleAskClick}
+          className="btn btn-primary"
+          aria-label="chat-btn"
+        >
+          Ask Questions
+        </button>
+      )}
     </div>
   );
 }

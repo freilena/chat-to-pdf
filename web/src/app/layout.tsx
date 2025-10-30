@@ -26,16 +26,16 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <header style={{ borderBottom: '1px solid #eaeaea' }}>
-          <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0' }}>
-            <h1 style={{ margin: 0, fontSize: '20px' }}>Chat to Your PDF</h1>
+        <header style={{ borderBottom: '1px solid var(--border)' }}>
+          <div className="container" style={{ padding: '12px 0' }}>
+            <h1 style={{ margin: 0, fontSize: '20px', textAlign: 'center' }}>Chat to Your PDF</h1>
           </div>
         </header>
         <main>
           <section className="hero">
-            <div className="container" style={{ padding: '24px 0' }}>
+            <div className="container" style={{ padding: '24px 0', textAlign: 'center' }}>
               <h2 className="section-title">Upload PDFs. Ask questions.</h2>
-              <p className="section-subtitle">Grounded answers with inline citations and a viewer.</p>
+              <p className="section-subtitle">AI-powered answers from your documents.</p>
             </div>
           </section>
           <div className="container" style={{ padding: '16px 0' }}>
@@ -43,7 +43,7 @@ export default function RootLayout({
           </div>
         </main>
         <footer style={{ borderTop: '1px solid var(--border)', marginTop: 24 }}>
-          <div className="container" style={{ padding: '12px 0', color: 'var(--muted)', fontSize: 12 }}>
+          <div className="container" style={{ padding: '12px 0', color: 'var(--muted)', fontSize: 12, textAlign: 'center' }}>
             © {new Date().getFullYear()} Chat to Your PDF
           </div>
         </footer>

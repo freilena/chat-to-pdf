@@ -1,5 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { http, HttpResponse } from 'msw';
+import { server } from '@/test/setup';
 import ChatPage from './page';
 
 // Mock Next.js router
@@ -23,6 +25,25 @@ describe('ChatPage', () => {
       sessionId: 'test-session-123',
       isAuthenticated: true,
     });
+
+    // Setup MSW handlers for API endpoints
+    server.use(
+      http.get('/api/index/status', ({ request }) => {
+        const url = new URL(request.url);
+        const sessionId = url.searchParams.get('session_id');
+        
+        // Return done status for any valid session ID
+        if (sessionId) {
+          return HttpResponse.json({
+            status: 'done',
+            total_files: 1,
+            files_indexed: 1,
+          });
+        }
+        
+        return HttpResponse.json({ error: 'Session not found' }, { status: 404 });
+      })
+    );
   });
 
   it('renders chat page with header and session info', () => {
@@ -30,7 +51,7 @@ describe('ChatPage', () => {
     
     expect(screen.getByText('Chat to Your PDF')).toBeInTheDocument();
     expect(screen.getByText('Sign out')).toBeInTheDocument();
-    expect(screen.getByText('Session: test-session-123')).toBeInTheDocument();
+    // Session ID is no longer displayed in UI (stored internally only)
   });
 
   it('renders message container', () => {
@@ -108,7 +129,7 @@ describe('ChatPage', () => {
     expect(chatContainer).toHaveClass('mobile-responsive');
   });
 
-  it('displays session ID correctly', () => {
+  it('renders chat page with different session IDs', () => {
     const customSessionId = 'custom-session-456';
     mockUseSession.mockReturnValue({
       sessionId: customSessionId,
@@ -117,7 +138,10 @@ describe('ChatPage', () => {
 
     render(<ChatPage />);
     
-    expect(screen.getByText(`Session: ${customSessionId}`)).toBeInTheDocument();
+    // Session ID is used internally but not displayed in UI
+    // Verify page renders correctly with different session IDs
+    expect(screen.getByText('Chat to Your PDF')).toBeInTheDocument();
+    expect(screen.getByTestId('chat-container')).toBeInTheDocument();
   });
 
   it('has proper header structure', () => {

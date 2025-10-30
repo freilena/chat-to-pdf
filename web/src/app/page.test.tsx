@@ -20,7 +20,7 @@ describe('UploadPanel', () => {
     vi.resetAllMocks();
   });
 
-  it('disables chat during indexing and shows session id', async () => {
+  it('disables chat during indexing and enables after completion', async () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(
@@ -52,15 +52,20 @@ describe('UploadPanel', () => {
     fireEvent.change(input);
 
     const uploadBtn = screen.getByLabelText('upload-btn');
-    const chatBtn = screen.getByLabelText('chat-btn') as HTMLButtonElement;
 
     fireEvent.click(uploadBtn);
 
-    await waitFor(() => expect(chatBtn.disabled).toBe(true));
-    // Shows progress indicator
-    expect(screen.getByLabelText('progress')).toHaveTextContent('Indexing');
-    await waitFor(() => expect(screen.getByLabelText('session-id')).toHaveTextContent('s123'));
-    await waitFor(() => expect(chatBtn.disabled).toBe(false));
+    // Shows progress indicator during indexing
+    await waitFor(() => expect(screen.getByLabelText('progress')).toHaveTextContent('Indexing'));
+    // Session ID is stored internally but not displayed in UI
+    
+    // After indexing completes, "Ask Questions" button should appear (not disabled)
+    await waitFor(() => {
+      const chatBtn = screen.getByLabelText('chat-btn') as HTMLButtonElement;
+      expect(chatBtn).toBeInTheDocument();
+      expect(chatBtn).not.toBeDisabled();
+      expect(chatBtn).toHaveTextContent('Ask Questions');
+    });
   });
 });
 

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { UserMessage } from './UserMessage';
 import { AssistantMessage } from './AssistantMessage';
 import { SystemMessage } from './SystemMessage';
@@ -17,11 +17,41 @@ interface MessageListProps {
 }
 
 export function MessageList({ messages, isLoading = false, scrollToBottom }: MessageListProps) {
+  const bottomSentinelRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    if (scrollToBottom) {
-      scrollToBottom();
+    // Scroll when messages or loading state changes
+    // Use scrollIntoView on sentinel element for reliable scrolling
+    if (bottomSentinelRef.current) {
+      // Check if scrollIntoView is available (not available in jsdom test environment)
+      const hasScrollIntoView = typeof bottomSentinelRef.current.scrollIntoView === 'function';
+      
+      if (hasScrollIntoView) {
+        // Small delay to ensure DOM is updated
+        setTimeout(() => {
+          if (bottomSentinelRef.current && typeof bottomSentinelRef.current.scrollIntoView === 'function') {
+            bottomSentinelRef.current.scrollIntoView({ behavior: 'auto', block: 'end' });
+          }
+        }, 0);
+        
+        // Also try with requestAnimationFrame
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            if (bottomSentinelRef.current && typeof bottomSentinelRef.current.scrollIntoView === 'function') {
+              bottomSentinelRef.current.scrollIntoView({ behavior: 'auto', block: 'end' });
+            }
+          });
+        });
+      }
     }
-  }, [messages, scrollToBottom]);
+    
+    // Also call parent scrollToBottom as fallback (works in all environments)
+    if (scrollToBottom) {
+      setTimeout(() => {
+        scrollToBottom();
+      }, 0);
+    }
+  }, [messages, isLoading, scrollToBottom]);
 
   if (messages.length === 0) {
     return (
@@ -76,6 +106,8 @@ export function MessageList({ messages, isLoading = false, scrollToBottom }: Mes
           <span className="typing-text">AI is thinking...</span>
         </div>
       )}
+      {/* Sentinel element for auto-scroll */}
+      <div ref={bottomSentinelRef} style={{ height: 1, flexShrink: 0 }} aria-hidden="true" />
     </div>
   );
 }
