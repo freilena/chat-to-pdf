@@ -1,4 +1,4 @@
-# Chat-To-PDF
+# Chat to your PDF
 
 A browser-based web application that enables users to chat with their PDF documents using AI-powered retrieval and question answering.
 
@@ -18,6 +18,17 @@ A browser-based web application that enables users to chat with their PDF docume
 
 ### Planned
 - **PDF Viewer**: Modal viewer with sentence-level highlighting
+- **Citations**: Include citations from the document
+- **Multiple documents**: User can upload several documents
+- **Backend State Management**: Migrate from In-Memory Session Storage to Database
+- **Session Management**: Inactivity Tracking, Session Expiry
+- **File inventory Management**: Delete files, upload additional files
+- **Rate Limiting Implementation**: Implement rate limiting across all API endpoints
+- **Monitoring and Alerts**: Set up thresholds and alerts
+- **Error Handeling**: Standardize error handling across all endpoints
+- **Security**: Improve security based on Audit findings
+- **Integration Testing Suite**: Create comprehensive automated integration tests
+- **Performance Testing & Optimization**
 
 ## Architecture
 
@@ -27,7 +38,6 @@ A browser-based web application that enables users to chat with their PDF docume
 - **Vector Store**: FAISS for semantic search (CPU-optimized)
 - **Keyword Search**: Simple keyword matching (MVP - Tantivy planned for future)
 - **Embeddings**: sentence-transformers with all-MiniLM-L6-v2 (80MB, 2x faster)
-- **PyTorch**: CPU-only build (~184MB vs 900MB GPU version)
 - **Deployment**: Docker Compose with optimized layer caching
 
 ## Quick Start

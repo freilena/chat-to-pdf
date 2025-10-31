@@ -28,6 +28,17 @@ RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTr
 # but won't trigger pip install or model download
 COPY api /app
 
+# Copy VERSION file from project root
+COPY VERSION /app/VERSION
+
+# Capture git info during build (Railway has .git access during build)
+# Write to a file that can be read at runtime
+RUN git rev-parse --abbrev-ref HEAD > /app/GIT_BRANCH 2>/dev/null || echo "unknown" > /app/GIT_BRANCH && \
+    git rev-parse --short HEAD > /app/GIT_COMMIT 2>/dev/null || echo "unknown" > /app/GIT_COMMIT && \
+    git rev-parse HEAD > /app/GIT_COMMIT_FULL 2>/dev/null || echo "unknown" > /app/GIT_COMMIT_FULL && \
+    git log -1 --format=%cI > /app/GIT_COMMIT_DATE 2>/dev/null || echo "unknown" > /app/GIT_COMMIT_DATE && \
+    (git diff --quiet && echo "false" > /app/GIT_UNCOMMITTED_CHANGES || echo "true" > /app/GIT_UNCOMMITTED_CHANGES) 2>/dev/null || echo "false" > /app/GIT_UNCOMMITTED_CHANGES
+
 # Default port for local development
 # Railway will override this with their dynamic PORT at runtime
 ENV PORT=8000
