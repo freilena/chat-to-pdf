@@ -38,14 +38,10 @@ export default function VersionBadge() {
       });
   }, []);
 
-  // Don't show while loading
-  if (isLoading) {
+  // Don't show anything in production or while loading
+  if (process.env.NODE_ENV !== 'development' || isLoading) {
     return null;
   }
-  
-  // Show in all environments (development and production)
-  // Comment out to hide in production:
-  // if (process.env.NODE_ENV !== 'development') return null;
 
   // Don't show if we couldn't fetch version
   if (!versionInfo) {
