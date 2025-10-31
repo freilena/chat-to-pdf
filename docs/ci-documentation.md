@@ -17,12 +17,12 @@ The Chat-To-PDF project uses GitHub Actions for comprehensive Continuous Integra
 - Pull requests
 - Push to main branch
 
-**Jobs** (8 parallel jobs):
+**Jobs** (7 parallel jobs + conditional smoke test):
 1. **Backend Linting** - Code style and quality
 2. **Backend Type Checking** - Static type analysis
 3. **Backend Tests (Core)** - Unit and integration tests (excluding real API tests)
 4. **OpenAI Tests (Mocked)** - OpenAI integration tests with no API cost
-5. **OpenAI Smoke Test** - Real OpenAI API validation (main branch only)
+5. **OpenAI Smoke Test** - Real OpenAI API validation (main)
 6. **Frontend Linting** - Code style and quality
 7. **Frontend Type Checking** - TypeScript validation
 8. **Frontend Tests** - Unit and integration tests
@@ -146,12 +146,12 @@ The Chat-To-PDF project uses GitHub Actions for comprehensive Continuous Integra
 ### Runtime Performance
 - **First Run**: ~5 minutes (cache warming)
 - **Subsequent Runs**: ~3-4 minutes (with caching)
-- **Parallel Execution**: All jobs run simultaneously
+- **Parallel Execution**: 7 core jobs run simultaneously; smoke test adds ~30s when triggered
 - **Cache Hit Rate**: High (dependencies rarely change)
 
 ### Resource Usage
 - **Runner**: Ubuntu Latest (GitHub-hosted)
-- **Concurrent Jobs**: 6 parallel jobs
+- **Concurrent Jobs**: 7 parallel jobs (OpenAI smoke test executes conditionally)
 - **Memory**: Standard GitHub Actions limits
 - **Storage**: Cached dependencies and models
 

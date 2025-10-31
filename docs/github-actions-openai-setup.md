@@ -107,7 +107,7 @@ pytest \
 - `test_query_with_openai.py`: 9 tests - Query integration
 
 #### 3. OpenAI Smoke Test (Real API)
-**Runs**: Main branch only (and feature/openai-integration)  
+**Runs**: Main branch  
 **Duration**: ~30 seconds  
 **Cost**: ~$0.000001 per run
 
@@ -126,9 +126,9 @@ pytest tests/test_openai_smoke.py -v -s
 - Makes 1 real API call to OpenAI
 - Perfect for CI environments
 
-**Why only on main?**
+**Why limit to main + integration branch?**
 - Minimizes API costs
-- Validates production integration
+- Validates production integration paths
 - Full coverage already provided by mocked tests
 
 ---
@@ -149,7 +149,7 @@ After pushing code:
    - ✅ Backend Type Checking
    - ✅ Backend Tests (Core) - 88 tests
    - ✅ OpenAI Tests (Mocked) - 47 tests
-   - ✅ OpenAI Smoke Test (main branch only) - 3 tests
+   - ✅ OpenAI Smoke Test (main) - 3 tests
    - ✅ Frontend Linting
    - ✅ Frontend Type Checking
    - ✅ Frontend Tests

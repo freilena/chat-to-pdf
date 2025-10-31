@@ -33,11 +33,12 @@ A browser-based web application that enables users to chat with their PDF docume
 ## Architecture
 
 - **Frontend**: Next.js (React) with TypeScript
-- **Backend**: FastAPI service orchestrating uploads, indexing, and chat responses
+- **Backend**: FastAPI (Python) service orchestrating uploads, indexing, and chat responses
 - **Session Store**: In-memory per-session tracker holding retrievers and progress
 - **Retrieval**: Hybrid FAISS vector search plus keyword fusion for ranked context
 - **LLM**: OpenAI GPT-4o-mini (async client with health caching and fallbacks)
 - **Embeddings**: Sentence Transformers all-MiniLM-L6-v2 (CPU-only footprint ~80MB)
+- **Keyword Search**: Simple keyword matching (MVP, Tantivy consideration for future)
 - **Deployment**: Docker Compose (frontend + backend) with caching-optimized layers
 
 ### System Diagram
@@ -171,7 +172,7 @@ The project uses GitHub Actions for automated CI/CD with comprehensive quality c
 2. **Backend Type Checking** - MyPy static type analysis
 3. **Backend Tests (Core)** - Pytest suite excluding OpenAI-dependent cases
 4. **OpenAI Tests (Mocked)** - Pytest suite with fully mocked OpenAI client
-5. **OpenAI Smoke Test** - Real API validation (runs only on `main` and `feature/openai-integration`)
+5. **OpenAI Smoke Test** - Real API validation (runs only on `main`)
 6. **Frontend Linting** - ESLint code quality checks
 7. **Frontend Type Checking** - TypeScript compilation validation
 8. **Frontend Tests** - Vitest test suite (81 tests)
