@@ -23,18 +23,28 @@ describe('UploadPanel', () => {
   it('disables chat during indexing and enables after completion', async () => {
     const fetchMock = vi
       .fn()
+      // Upload response
       .mockResolvedValueOnce(
         new Response(
           JSON.stringify({ session_id: 's123', totals: { files: 1, bytes: 7 } }),
           { status: 200 },
         ),
       )
+      // First status check - indexing
       .mockResolvedValueOnce(
         new Response(
           JSON.stringify({ status: 'indexing', total_files: 1, files_indexed: 0 }),
           { status: 200 },
         ),
       )
+      // Second status check - still indexing
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({ status: 'indexing', total_files: 1, files_indexed: 0 }),
+          { status: 200 },
+        ),
+      )
+      // Third status check - done
       .mockResolvedValueOnce(
         new Response(
           JSON.stringify({ status: 'done', total_files: 1, files_indexed: 1 }),
@@ -56,16 +66,17 @@ describe('UploadPanel', () => {
     fireEvent.click(uploadBtn);
 
     // Shows progress indicator during indexing
-    await waitFor(() => expect(screen.getByLabelText('progress')).toHaveTextContent('Indexing'));
+    await waitFor(() => expect(screen.getByLabelText('progress')).toHaveTextContent('Indexing'), { timeout: 3000 });
     // Session ID is stored internally but not displayed in UI
     
     // After indexing completes, "Ask Questions" button should appear (not disabled)
+    // Increased timeout to account for 2-second polling interval
     await waitFor(() => {
       const chatBtn = screen.getByLabelText('chat-btn') as HTMLButtonElement;
       expect(chatBtn).toBeInTheDocument();
       expect(chatBtn).not.toBeDisabled();
       expect(chatBtn).toHaveTextContent('Ask Questions');
-    });
+    }, { timeout: 10000 });
   });
 });
 

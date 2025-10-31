@@ -34,19 +34,52 @@ export function UploadPanel() {
     window.dispatchEvent(new CustomEvent('sessionUpdated'));
     setFilesIndexed(0);
     setTotalFiles(upJson.totals?.files ?? (files?.length ?? 0));
+    
+    // Poll for indexing status (max 60 attempts = 2 minutes)
     let tries = 0;
-    while (tries < 5) {
+    const maxTries = 60;
+    const pollInterval = 2000; // 2 seconds between polls
+    
+    while (tries < maxTries) {
       tries++;
-      const stRes = await fetch(`/api/index/status?session_id=${upJson.session_id}`);
-      const st = await stRes.json();
-      if (typeof st.files_indexed === 'number') setFilesIndexed(st.files_indexed);
-      if (typeof st.total_files === 'number') setTotalFiles(st.total_files);
-      if (st.status === 'done') {
-        setIsIndexingComplete(true);
-        break;
+      
+      try {
+        const stRes = await fetch(`/api/index/status?session_id=${upJson.session_id}`);
+        
+        // Handle timeout or error responses
+        if (!stRes.ok) {
+          console.warn(`Status check failed (attempt ${tries}/${maxTries}):`, stRes.status);
+          await new Promise((r) => setTimeout(r, pollInterval));
+          continue;
+        }
+        
+        const st = await stRes.json();
+        if (typeof st.files_indexed === 'number') setFilesIndexed(st.files_indexed);
+        if (typeof st.total_files === 'number') setTotalFiles(st.total_files);
+        
+        if (st.status === 'done') {
+          setIsIndexingComplete(true);
+          break;
+        }
+        
+        if (st.status === 'error') {
+          setError('Indexing failed: ' + (st.error_message || 'Unknown error'));
+          break;
+        }
+      } catch (err) {
+        console.error(`Status check error (attempt ${tries}/${maxTries}):`, err);
+        // Continue polling on error - might be temporary
       }
-      await new Promise((r) => setTimeout(r, 10));
+      
+      // Wait before next poll
+      await new Promise((r) => setTimeout(r, pollInterval));
     }
+    
+    // If we exhausted all tries without success
+    if (tries >= maxTries) {
+      setError('Indexing timeout - please try again or check Railway logs');
+    }
+    
     setIsIndexing(false);
   }
 

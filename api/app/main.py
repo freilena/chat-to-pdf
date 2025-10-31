@@ -72,8 +72,17 @@ def validate_pdf_file(name: str, data: bytes) -> None:
 
 
 def get_git_info() -> dict[str, str | bool]:
-    """Get git information from the repository."""
-    repo_root = Path(__file__).parent.parent
+    """Get git information from the repository or build-time files."""
+    # First, try to read from build-time files (for Docker/Railway deployments)
+    # These files are created during Docker build when .git is available
+    git_files = {
+        "branch": Path("/app/GIT_BRANCH"),
+        "commit": Path("/app/GIT_COMMIT"),
+        "commit_full": Path("/app/GIT_COMMIT_FULL"),
+        "commit_date": Path("/app/GIT_COMMIT_DATE"),
+        "uncommitted_changes": Path("/app/GIT_UNCOMMITTED_CHANGES"),
+    }
+    
     git_info: dict[str, str | bool] = {
         "branch": "unknown",
         "commit": "unknown",
@@ -81,7 +90,25 @@ def get_git_info() -> dict[str, str | bool]:
         "commit_date": "unknown",
         "uncommitted_changes": False,
     }
-
+    
+    # Try reading from build-time files first
+    try:
+        for key, file_path in git_files.items():
+            if file_path.exists():
+                content = file_path.read_text().strip()
+                if key == "uncommitted_changes":
+                    git_info[key] = content.lower() == "true"
+                elif content:
+                    git_info[key] = content
+    except (OSError, IOError):
+        pass
+    
+    # If we got valid info from files, return it
+    if git_info["commit"] != "unknown":
+        return git_info
+    
+    # Fallback: try running git commands (for local development)
+    repo_root = Path(__file__).parent.parent
     try:
         # Get current branch
         result = subprocess.run(

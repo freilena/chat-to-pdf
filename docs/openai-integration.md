@@ -238,7 +238,7 @@ except Exception as e:
 
 ### Mocked Tests
 
-All automated tests use mocks to avoid API costs:
+Most automated tests use mocks to avoid API costs. These mocked suites run on every commit in CI, while real API exercises are isolated to a smoke test that only executes on `main` and an optional manual E2E flow.
 
 ```python
 @pytest.mark.asyncio
@@ -266,9 +266,10 @@ For integration testing with real API:
 
 ### Test Coverage
 
-- 20+ unit tests for OpenAI client
-- 5+ integration tests for endpoints
-- All tests pass without API key (mocked)
+- 47 mocked OpenAI tests (client, endpoints, security, query integration)
+- 3 smoke tests invoking the real API (conditional in CI)
+- 2 manual end-to-end tests (real API)
+- Mocked suites pass without an API key; smoke/E2E runs require `OPENAI_API_KEY`
 
 ## Troubleshooting
 
