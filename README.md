@@ -33,12 +33,43 @@ A browser-based web application that enables users to chat with their PDF docume
 ## Architecture
 
 - **Frontend**: Next.js (React) with TypeScript
-- **Backend**: FastAPI (Python) with hybrid retrieval system and CORS support
-- **LLM**: OpenAI GPT-4o-mini for answer generation with RAG
-- **Vector Store**: FAISS for semantic search (CPU-optimized)
-- **Keyword Search**: Simple keyword matching (MVP - Tantivy planned for future)
-- **Embeddings**: sentence-transformers with all-MiniLM-L6-v2 (80MB, 2x faster)
-- **Deployment**: Docker Compose with optimized layer caching
+- **Backend**: FastAPI service orchestrating uploads, indexing, and chat responses
+- **Session Store**: In-memory per-session tracker holding retrievers and progress
+- **Retrieval**: Hybrid FAISS vector search plus keyword fusion for ranked context
+- **LLM**: OpenAI GPT-4o-mini (async client with health caching and fallbacks)
+- **Embeddings**: Sentence Transformers all-MiniLM-L6-v2 (CPU-only footprint ~80MB)
+- **Deployment**: Docker Compose (frontend + backend) with caching-optimized layers
+
+### System Diagram
+
+```
+┌────────────┐         HTTPS          ┌───────────────┐
+│  End User  │ ─────────────────────▶ │  Next.js UI   │
+└────────────┘                        │  (web/chat)   │
+                                      └──────┬────────┘
+                                             │ REST API calls
+                                      ┌───────▼────────┐
+                                      │  FastAPI API   │
+                                      │  (uploads &    │
+                                      │  chat orches.) │
+                                      └──────┬────────┘
+                               Background tasks │
+                                      ┌────────▼────────┐
+                                      │ Hybrid Retriever│
+                                      │  • FAISS index  │
+                                      │  • Keyword map  │
+                                      └────────┬────────┘
+                                               │ Context chunks
+                                      ┌────────▼────────┐
+                                      │ OpenAI Client   │
+                                      │ gpt-4o-mini RAG │
+                                      └────────┬────────┘
+                                               │ Answers
+                                      ┌────────▼────────┐
+                                      │ Next.js UI      │
+                                      │ (chat render)   │
+                                      └──────────────────┘
+```
 
 ## Quick Start
 
@@ -130,17 +161,20 @@ The project uses GitHub Actions for automated CI/CD with comprehensive quality c
 
 ### CI Pipeline Features
 - **Automated Testing**: Runs on every commit and pull request
-- **Parallel Execution**: All 6 jobs run simultaneously (~3-4 minutes total)
+- **Parallel Execution**: All scheduled jobs run simultaneously (~3-4 minutes total; smoke test adds ~30s when triggered)
 - **Dependency Caching**: Pip and npm dependencies cached for speed
 - **Model Caching**: Embedding model cached to avoid re-downloads
+- **OpenAI Isolation**: Mocked tests on every PR; real API smoke test gated to main/feature integration branches
 
 ### CI Jobs
 1. **Backend Linting** - Ruff code style and quality checks
 2. **Backend Type Checking** - MyPy static type analysis
-3. **Backend Tests** - Pytest test suite (50+ tests)
-4. **Frontend Linting** - ESLint code quality checks
-5. **Frontend Type Checking** - TypeScript compilation validation
-6. **Frontend Tests** - Vitest test suite (81 tests)
+3. **Backend Tests (Core)** - Pytest suite excluding OpenAI-dependent cases
+4. **OpenAI Tests (Mocked)** - Pytest suite with fully mocked OpenAI client
+5. **OpenAI Smoke Test** - Real API validation (runs only on `main` and `feature/openai-integration`)
+6. **Frontend Linting** - ESLint code quality checks
+7. **Frontend Type Checking** - TypeScript compilation validation
+8. **Frontend Tests** - Vitest test suite (81 tests)
 
 ### Additional Workflows
 - **Pylint Analysis** - Python code analysis with detailed reports
@@ -159,7 +193,7 @@ For detailed CI documentation, see [docs/ci-documentation.md](docs/ci-documentat
 code/pdf-chat/
 ├── .github/               # GitHub Actions CI/CD
 │   └── workflows/
-│       ├── ci.yml         # Main CI pipeline (6 parallel jobs)
+│       ├── ci.yml         # Main CI pipeline (7 parallel jobs + conditional OpenAI smoke test)
 │       └── pylint.yml     # Python code analysis
 ├── api/                   # FastAPI backend
 │   ├── app/
